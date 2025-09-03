@@ -76,7 +76,7 @@ const ExecutionResults: React.FC = () => {
       width: '30%',
       render: (text: string) => (
         <Text copyable style={{ maxWidth: '200px', display: 'block' }}>
-          {text || '-'
+          {text || '-'}
         </Text>
       )
     },

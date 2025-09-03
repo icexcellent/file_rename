@@ -81,7 +81,7 @@ export class RenameService {
           if (i < filePaths.length - 1) {
             await new Promise(resolve => setTimeout(resolve, 100))
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error(`重命名文件失败: ${filePath}`, error)
           const errorResult: RenameResult = {
             originalPath: filePath,
@@ -156,7 +156,7 @@ export class RenameService {
         confidence: extractedText ? 100 : 0
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error(`重命名文件失败: ${filePath}`, error)
       return {
         originalPath: filePath,
@@ -213,10 +213,10 @@ export class RenameService {
         return path.basename(filePath, ext)
       }
       
-    } catch (error) {
-      console.error(`提取文本失败: ${filePath}`, error)
-      return path.basename(filePath, path.extname(filePath))
-    }
+            } catch (error: any) {
+          console.error(`提取文本失败: ${filePath}`, error)
+          return path.basename(filePath, path.extname(filePath))
+        }
   }
 
   /**
@@ -238,7 +238,7 @@ export class RenameService {
           if (optimizedName) {
             newName = optimizedName
           }
-        } catch (error) {
+        } catch (error: any) {
           console.warn('AI优化文件名失败，使用原始文本:', error.message)
         }
       }

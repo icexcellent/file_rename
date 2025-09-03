@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Button, Input, Radio, Space, Card, Typography, message, Progress, Alert } from 'antd'
 import { FolderOpenOutlined, FileOutlined, DeleteOutlined, PlayCircleOutlined, RollbackOutlined, StopOutlined } from '@ant-design/icons'
-import { useConfigStore } from '@/stores/configStore'
+import { useConfigStore } from '../stores/configStore'
 
 const { Title, Text } = Typography
 

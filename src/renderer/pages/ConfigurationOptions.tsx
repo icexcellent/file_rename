@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Button, Input, InputNumber, Checkbox, Space, Card, Typography, message, Alert } from 'antd'
 import { RobotOutlined, SettingOutlined, FileTextOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons'
-import { useConfigStore } from '@/stores/configStore'
+import { useConfigStore } from '../stores/configStore'
 
 const { Title, Text } = Typography
 

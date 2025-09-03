@@ -32,7 +32,7 @@ export class PDFService {
         author: pdfDoc.getAuthor(),
         subject: pdfDoc.getSubject()
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(`获取PDF信息失败: ${pdfPath}`, error)
       throw new Error(`获取PDF信息失败: ${error.message}`)
     }
@@ -66,7 +66,7 @@ export class PDFService {
       await this.simulatePDFToImage(pdfPath, pageNumber, outputPath, dpi)
       
       return outputPath
-    } catch (error) {
+    } catch (error: any) {
       console.error(`PDF页面转换失败: ${pdfPath} 第${pageNumber}页`, error)
       throw new Error(`PDF页面转换失败: ${error.message}`)
     }
@@ -103,7 +103,7 @@ export class PDFService {
       
       console.log(`PDF转换完成: ${pdfPath}, 成功转换${imagePaths.length}页`)
       return imagePaths
-    } catch (error) {
+    } catch (error: any) {
       console.error(`PDF转换失败: ${pdfPath}`, error)
       throw new Error(`PDF转换失败: ${error.message}`)
     }
@@ -113,8 +113,8 @@ export class PDFService {
    * 模拟PDF转图片过程（实际项目中需要替换为真实实现）
    */
   private async simulatePDFToImage(
-    pdfPath: string, 
-    pageNumber: number, 
+    _pdfPath: string, 
+    _pageNumber: number, 
     outputPath: string, 
     dpi: number
   ): Promise<void> {
@@ -145,9 +145,9 @@ export class PDFService {
    */
   async isPDF(filePath: string): Promise<boolean> {
     try {
-      const buffer = await fs.readFile(filePath, { start: 0, end: 4 })
+      const buffer = await fs.readFile(filePath)
       // PDF文件以%PDF开头
-      return buffer.toString() === '%PDF'
+      return buffer.subarray(0, 4).toString() === '%PDF'
     } catch (error) {
       return false
     }

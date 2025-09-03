@@ -1,6 +1,5 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron'
 import path from 'path'
-import { fileURLToPath } from 'url'
 import Store from 'electron-store'
 import { renameService, RenameOptions } from './services/renameService'
 import { ocrService } from './services/ocrService'
@@ -110,13 +109,13 @@ ipcMain.handle('get-config', () => {
   return store.get('config', {})
 })
 
-ipcMain.handle('set-config', (event, config) => {
+ipcMain.handle('set-config', (_event, config) => {
   store.set('config', config)
   return true
 })
 
 // 文件重命名处理
-ipcMain.handle('process-files', async (event, files: string[], options: RenameOptions) => {
+ipcMain.handle('process-files', async (_event, files: string[], options: RenameOptions) => {
   try {
     // 限制并发数量为100
     if (files.length > 100) {
@@ -162,7 +161,7 @@ ipcMain.handle('stop-rename', () => {
 })
 
 // 测试DeepSeek API
-ipcMain.handle('test-deepseek-api', async (event, apiKey: string) => {
+ipcMain.handle('test-deepseek-api', async (_event, apiKey: string) => {
   try {
     const response = await fetch('https://api.deepseek.com/v1/models', {
       headers: {

@@ -23,17 +23,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // 进度更新
   onProgress: (callback: (progress: any) => void) => {
-    ipcRenderer.on('progress-update', (event, progress) => callback(progress))
+    ipcRenderer.on('progress-update', (_event, progress) => callback(progress))
   },
   
   // 结果更新
   onResult: (callback: (result: any) => void) => {
-    ipcRenderer.on('result-update', (event, result) => callback(result))
+    ipcRenderer.on('result-update', (_event, result) => callback(result))
   },
   
   // 错误处理
   onError: (callback: (error: any) => void) => {
-    ipcRenderer.on('error-update', (event, error) => callback(error))
+    ipcRenderer.on('error-update', (_event, error) => callback(error))
   },
   
   // 移除监听器

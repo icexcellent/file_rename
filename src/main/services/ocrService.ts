@@ -1,5 +1,4 @@
 import { createWorker } from 'tesseract.js'
-import path from 'path'
 import fs from 'fs-extra'
 
 export interface OCRResult {
@@ -71,7 +70,7 @@ export class OCRService {
         confidence: result.data.confidence,
         language: 'chi_sim+eng'
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(`OCR识别失败: ${imagePath}`, error)
       throw new Error(`OCR识别失败: ${error.message}`)
     }

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { ConfigProvider, App as AntApp } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
-import RenameOperation from '@/pages/RenameOperation'
-import ConfigurationOptions from '@/pages/ConfigurationOptions'
-import ExecutionResults from '@/pages/ExecutionResults'
-import { useConfigStore } from '@/stores/configStore'
+import RenameOperation from './pages/RenameOperation'
+import ConfigurationOptions from './pages/ConfigurationOptions'
+import ExecutionResults from './pages/ExecutionResults'
+import { useConfigStore } from './stores/configStore'
 import './App.css'
 
 const App: React.FC = () => {
