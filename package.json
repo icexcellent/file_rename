@@ -15,11 +15,8 @@
     "build:renderer": "vite build",
     "build:main": "tsc -p tsconfig.main.json",
     "electron:build": "npm run build:renderer && npm run build:main && electron-builder",
-    "electron:build:mac": "npm run build:renderer && npm run build:main && electron-builder --mac",
     "electron:build:win": "npm run build:renderer && npm run build:main && electron-builder --win",
-    "electron:build:linux": "npm run build:renderer && npm run build:main && electron-builder --linux",
     "build:ci": "npm run build:renderer && npm run build:main && electron-builder --publish=never",
-    "build:ci:mac": "npm run build:renderer && npm run build:main && electron-builder --mac --publish=never",
     "build:ci:win": "npm run build:renderer && npm run build:main && electron-builder --win --publish=never",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -90,11 +87,6 @@
         ]
       }
     ],
-    "mac": {
-      "target": "zip",
-      "category": "public.app-category.utilities",
-      "artifactName": "智能文件重命名工具-${version}-mac.zip"
-    },
     "win": {
       "target": "portable",
       "artifactName": "智能文件重命名工具-${version}-portable.exe",

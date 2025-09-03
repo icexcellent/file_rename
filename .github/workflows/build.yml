@@ -10,18 +10,8 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
     timeout-minutes: 45  # 增加超时时间
-    strategy:
-      matrix:
-        os: [macos-latest, windows-latest]
-        include:
-          - os: macos-latest
-            platform: mac
-            target: dmg
-          - os: windows-latest
-            platform: win
-            target: nsis
 
     steps:
       - name: Checkout code
@@ -37,7 +27,6 @@ jobs:
           cache-dependency-path: '**/package-lock.json'
 
       - name: Clear npm cache (Windows)
-        if: matrix.os == 'windows-latest'
         run: |
           npm cache clean --force
           npm cache verify
@@ -45,33 +34,44 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm ci --no-audit --no-fund --prefer-offline
-          # 重新构建sharp等原生模块
+          echo "=== 开始安装依赖 ==="
+          echo "当前时间: %date% %time%"
+          echo "Node版本:"
+          node --version
+          echo "NPM版本:"
+          npm --version
+          echo "工作目录:"
+          cd
+          
+          # 清理npm缓存
+          npm cache clean --force
+          
+          # 设置npm配置
+          npm config set registry https://registry.npmjs.org/
+          npm config set fetch-timeout 300000
+          npm config set fetch-retries 3
+          
+          echo "=== 开始npm ci ==="
+          npm ci --no-audit --no-fund --prefer-offline --verbose
+          
+          echo "=== 依赖安装完成，开始重建原生模块 ==="
           npm rebuild sharp
           npm rebuild tesseract.js-core
-        timeout-minutes: 15
+          
+          echo "=== 依赖安装和重建完成 ==="
+          echo "完成时间: %date% %time%"
+        timeout-minutes: 20
+        shell: cmd
 
       - name: Build application
         run: |
-          if "%{{ matrix.os }}"=="windows-latest" (
-            set NODE_OPTIONS=--max-old-space-size=4096
-          ) else (
-            export NODE_OPTIONS=--max-old-space-size=4096
-          )
+          set NODE_OPTIONS=--max-old-space-size=4096
           npm run build
         timeout-minutes: 15
+        shell: cmd
 
       - name: Build Electron app
-        run: |
-          if [[ "${{ matrix.platform }}" == "mac" ]]; then
-            chmod +x scripts/build-ci.sh
-            ./scripts/build-ci.sh mac
-          elif [[ "${{ matrix.platform }}" == "win" ]]; then
-            scripts/build-ci.bat win
-          else
-            chmod +x scripts/build-ci.sh
-            ./scripts/build-ci.sh
-          fi
+        run: scripts/build-ci.bat win
         timeout-minutes: 25
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -79,7 +79,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform }}-build
+          name: windows-build
           path: dist-build/*
           retention-days: 7
 
@@ -96,8 +96,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            mac-build/*.dmg
-            win-build/*.exe
+            windows-build/*.exe
           draft: false
           prerelease: false
           generate_release_notes: true
