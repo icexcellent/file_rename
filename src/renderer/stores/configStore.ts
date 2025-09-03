@@ -37,27 +37,42 @@ export const useConfigStore = create<ConfigStore>()(
       
       loadConfig: async () => {
         try {
+          console.log('[配置Store] 开始加载配置')
           if (window.electronAPI) {
+            console.log('[配置Store] electronAPI可用，开始获取配置')
             const savedConfig = await window.electronAPI.getConfig()
+            console.log('[配置Store] 从主进程获取的配置:', savedConfig)
             if (savedConfig && Object.keys(savedConfig).length > 0) {
-              set({ config: { ...defaultConfig, ...savedConfig } })
+              const mergedConfig = { ...defaultConfig, ...savedConfig }
+              console.log('[配置Store] 合并后的配置:', mergedConfig)
+              set({ config: mergedConfig })
+            } else {
+              console.log('[配置Store] 未获取到配置，使用默认配置')
             }
+          } else {
+            console.log('[配置Store] electronAPI不可用')
           }
         } catch (error) {
-          console.error('加载配置失败:', error)
+          console.error('[配置Store] 加载配置失败:', error)
         }
       },
       
       updateConfig: async (updates: Partial<Config>) => {
+        console.log('[配置Store] 开始更新配置:', updates)
         const newConfig = { ...get().config, ...updates }
+        console.log('[配置Store] 更新后的完整配置:', newConfig)
         set({ config: newConfig })
         
         try {
           if (window.electronAPI) {
+            console.log('[配置Store] 调用主进程保存配置')
             await window.electronAPI.setConfig(newConfig)
+            console.log('[配置Store] 配置保存成功')
+          } else {
+            console.log('[配置Store] electronAPI不可用，无法保存配置')
           }
         } catch (error) {
-          console.error('保存配置失败:', error)
+          console.error('[配置Store] 保存配置失败:', error)
         }
       },
       

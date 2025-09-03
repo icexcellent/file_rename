@@ -244,16 +244,23 @@ export class RenameService {
         }
   }
 
-  /**
+    /**
    * 生成新文件名
    */
   private async generateNewFileName(text: string, extension: string, options: RenameOptions): Promise<string> {
     try {
+      console.log(`[文件名生成] 开始生成新文件名`)
+      console.log(`[文件名生成] 输入文本长度: ${text.length}`)
+      console.log(`[文件名生成] 文件扩展名: ${extension}`)
+      console.log(`[文件名生成] 配置选项:`, JSON.stringify(options, null, 2))
+      console.log(`[文件名生成] DeepSeek API密钥: ${options.deepseekApiKey ? `${options.deepseekApiKey.substring(0, 8)}...` : '未配置'}`)
+      
       let newName = text
       
       // 如果文本为空，使用时间戳
       if (!newName || newName.trim() === '') {
         newName = `文件_${Date.now()}`
+        console.log(`[文件名生成] 文本为空，使用时间戳: ${newName}`)
       }
       
       // 使用DeepSeek API优化文件名
@@ -263,20 +270,21 @@ export class RenameService {
         console.log(`[AI优化] 原始文本预览: ${text.substring(0, 100)}...`)
         try {
           const optimizedName = await this.optimizeFileNameWithAI(text, options.deepseekApiKey)
-                      if (optimizedName) {
-              console.log(`[AI优化] API调用成功，优化后文件名: ${optimizedName}`)
-              // AI返回的文件名不包含扩展名，直接使用
-              console.log(`[AI优化] 使用AI优化的文件名: ${optimizedName}`)
-              newName = optimizedName
-            } else {
-              console.log(`[AI优化] API返回空结果，使用原始文本`)
-            }
+          if (optimizedName) {
+            console.log(`[AI优化] API调用成功，优化后文件名: ${optimizedName}`)
+            // AI返回的文件名不包含扩展名，直接使用
+            console.log(`[AI优化] 使用AI优化的文件名: ${optimizedName}`)
+            newName = optimizedName
+          } else {
+            console.log(`[AI优化] API返回空结果，使用原始文本`)
+          }
         } catch (error: any) {
           console.warn(`[AI优化] AI优化文件名失败，使用原始文本: ${error.message}`)
         }
       } else {
         if (!options.deepseekApiKey) {
           console.log(`[AI优化] 未配置DeepSeek API密钥，跳过AI优化`)
+          console.log(`[AI优化] API密钥值: ${options.deepseekApiKey}`)
         } else if (text.length <= 10) {
           console.log(`[AI优化] 文本长度不足(${text.length} <= 10)，跳过AI优化`)
         }

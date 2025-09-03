@@ -136,6 +136,11 @@ ipcMain.handle('set-config', (_event, config) => {
 // 文件重命名处理
 ipcMain.handle('process-files', async (_event, files: string[], options: RenameOptions) => {
   try {
+    console.log(`[主进程] 开始处理文件重命名`)
+    console.log(`[主进程] 文件数量: ${files.length}`)
+    console.log(`[主进程] 配置选项:`, JSON.stringify(options, null, 2))
+    console.log(`[主进程] DeepSeek API密钥: ${options.deepseekApiKey ? `${options.deepseekApiKey.substring(0, 8)}...` : '未配置'}`)
+    
     // 限制并发数量为100
     if (files.length > 100) {
       throw new Error(`文件数量过多: ${files.length}，最多支持100个文件`)

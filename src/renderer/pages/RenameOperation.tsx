@@ -65,35 +65,68 @@ const RenameOperation: React.FC = () => {
 
   const handleSelectFiles = async () => {
     try {
+      handleAddLog('[文件选择] 开始选择文件...')
       if (window.electronAPI) {
+        handleAddLog('[文件选择] electronAPI可用，调用选择文件对话框')
         const files = await window.electronAPI.selectFiles()
+        handleAddLog(`[文件选择] 用户选择了 ${files.length} 个文件`)
+        
+        // 记录每个文件的详细信息
+        files.forEach((file, index) => {
+          const fileName = file.split('/').pop() || file
+          const fileSize = require('fs').statSync(file).size
+          handleAddLog(`[文件选择] 文件${index + 1}: ${fileName} (${(fileSize / 1024 / 1024).toFixed(2)}MB)`)
+        })
+        
         setSelectedFiles(files)
-        handleAddLog(`已选择 ${files.length} 个文件`)
+        handleAddLog(`[文件选择] 文件选择完成，共 ${files.length} 个文件`)
         message.success(`已选择 ${files.length} 个文件`)
+      } else {
+        handleAddLog('[文件选择] electronAPI不可用')
+        message.error('electronAPI不可用')
       }
-          } catch (error) {
-        message.error('选择文件失败')
-        handleAddLog('选择文件失败')
-      }
+    } catch (error: any) {
+      handleAddLog(`[文件选择] 选择文件失败: ${error.message}`)
+      message.error('选择文件失败')
+    }
   }
 
   const handleSelectDirectory = async () => {
     try {
+      handleAddLog('[目录选择] 开始选择目标目录...')
       if (window.electronAPI) {
+        handleAddLog('[目录选择] electronAPI可用，调用选择目录对话框')
         const directory = await window.electronAPI.selectDirectory()
+        handleAddLog(`[目录选择] 用户选择了目录: ${directory}`)
+        
+        // 检查目录权限和空间
+        try {
+          const fs = require('fs')
+          const stats = fs.statSync(directory)
+          const isDirectory = stats.isDirectory()
+          const permissions = fs.accessSync(directory, fs.constants.W_OK) ? '可写' : '不可写'
+          handleAddLog(`[目录选择] 目录类型: ${isDirectory ? '目录' : '非目录'}`)
+          handleAddLog(`[目录选择] 目录权限: ${permissions}`)
+        } catch (dirError: any) {
+          handleAddLog(`[目录选择] 目录检查失败: ${dirError.message}`)
+        }
+        
         setTargetDirectory(directory)
-        handleAddLog(`已选择目标目录: ${directory}`)
+        handleAddLog(`[目录选择] 目录选择完成: ${directory}`)
         message.success('已选择目标目录')
+      } else {
+        handleAddLog('[目录选择] electronAPI不可用')
+        message.error('electronAPI不可用')
       }
-    } catch (error) {
+    } catch (error: any) {
+      handleAddLog(`[目录选择] 选择目录失败: ${error.message}`)
       message.error('选择目录失败')
-      handleAddLog('选择目录失败')
     }
   }
 
 
 
-  const handleStartRename = async () => {
+    const handleStartRename = async () => {
     if (selectedFiles.length === 0) {
       message.warning('请先选择要重命名的文件')
       return
@@ -109,14 +142,32 @@ const RenameOperation: React.FC = () => {
       return
     }
 
+    // 检查配置是否正确加载
+    console.log(`[重命名操作] 当前配置:`, config)
+    console.log(`[重命名操作] DeepSeek API密钥: ${config.deepseekApiKey ? `${config.deepseekApiKey.substring(0, 8)}...` : '未配置'}`)
+    
+    // 添加详细配置日志到执行日志
+    handleAddLog(`[配置检查] 文本提取长度: ${config.textExtractionLength}`)
+    handleAddLog(`[配置检查] 最大文件名长度: ${config.maxFileNameLength}`)
+    handleAddLog(`[配置检查] 转换为小写: ${config.convertToLowercase}`)
+    handleAddLog(`[配置检查] 空格转下划线: ${config.convertSpacesToUnderscores}`)
+    handleAddLog(`[配置检查] DeepSeek API密钥: ${config.deepseekApiKey ? '已配置' : '未配置'}`)
+    
+    if (!config.deepseekApiKey) {
+      message.warning('未配置DeepSeek API密钥，将使用原始文件名')
+      handleAddLog('警告: 未配置DeepSeek API密钥，将使用原始文件名')
+    } else {
+      handleAddLog(`[配置检查] API密钥前8位: ${config.deepseekApiKey.substring(0, 8)}...`)
+    }
+
     setIsProcessing(true)
     clearResults()
     clearLogs()
     setProgress(null)
 
-          try {
-        handleAddLog('开始重命名操作...')
-      
+    try {
+      handleAddLog('开始重命名操作...')
+    
       const options = {
         storageMode,
         targetDirectory: storageMode === 'copy' ? targetDirectory : undefined,
@@ -126,17 +177,24 @@ const RenameOperation: React.FC = () => {
         convertSpacesToUnderscores: config.convertSpacesToUnderscores,
         deepseekApiKey: config.deepseekApiKey
       }
+      
+      handleAddLog(`[重命名操作] 传递给主进程的选项: ${JSON.stringify(options, null, 2)}`)
 
       if (window.electronAPI) {
+        handleAddLog('[重命名操作] 调用主进程processFiles方法')
         const result = await window.electronAPI.processFiles(selectedFiles, options)
+        handleAddLog(`[重命名操作] 主进程返回结果: ${JSON.stringify(result, null, 2)}`)
         
         if (result.success) {
-          handleAddLog(result.message)
+          handleAddLog(`[重命名操作] 操作成功: ${result.message}`)
           message.success('重命名操作已完成')
         } else {
-          handleAddLog(`操作失败: ${result.error}`)
+          handleAddLog(`[重命名操作] 操作失败: ${result.error}`)
           message.error(`操作失败: ${result.error}`)
         }
+      } else {
+        handleAddLog('[重命名操作] electronAPI不可用，无法调用主进程')
+        message.error('electronAPI不可用')
       }
     } catch (error: any) {
       handleAddLog(`启动重命名失败: ${error.message}`)
@@ -148,12 +206,18 @@ const RenameOperation: React.FC = () => {
 
   const handleStopRename = async () => {
     try {
+      handleAddLog('[停止操作] 开始停止重命名操作...')
       if (window.electronAPI) {
+        handleAddLog('[停止操作] 调用主进程stopRename方法')
         await window.electronAPI.stopRename()
-              handleAddLog('重命名操作已停止')
-      message.info('重命名操作已停止')
+        handleAddLog('[停止操作] 重命名操作已停止')
+        message.info('重命名操作已停止')
+      } else {
+        handleAddLog('[停止操作] electronAPI不可用')
+        message.error('electronAPI不可用')
       }
-    } catch (error) {
+    } catch (error: any) {
+      handleAddLog(`[停止操作] 停止操作失败: ${error.message}`)
       message.error('停止操作失败')
     }
   }

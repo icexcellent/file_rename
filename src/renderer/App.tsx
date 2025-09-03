@@ -13,7 +13,12 @@ const App: React.FC = () => {
 
   useEffect(() => {
     // 加载配置
-    loadConfig()
+    console.log('[App] 开始加载配置...')
+    loadConfig().then(() => {
+      console.log('[App] 配置加载完成')
+    }).catch((error) => {
+      console.error('[App] 配置加载失败:', error)
+    })
   }, [loadConfig])
 
   const tabs = [
