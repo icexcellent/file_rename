@@ -42,7 +42,7 @@ export interface RenameState {
 
 export const useRenameStore = create<RenameState>()(
   persist(
-    (set, get) => ({
+    (set, _get) => ({
       selectedFiles: [],
       targetDirectory: '',
       storageMode: 'copy',

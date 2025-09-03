@@ -23,7 +23,6 @@ const RenameOperation: React.FC = () => {
     setProgress,
     addResult,
     addLog,
-    clearAll,
     clearResults,
     clearLogs
   } = useRenameStore()
