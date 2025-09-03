@@ -10,17 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-latest, windows-latest]
-        include:
-          - os: macos-latest
-            platform: mac
-            target: dmg
-          - os: windows-latest
-            platform: win
-            target: nsis
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code
@@ -41,14 +31,14 @@ jobs:
         run: npm run build
 
       - name: Build Electron app
-        run: npm run electron:build
+        run: npm run electron:build:win
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform }}-build
+          name: windows-build
           path: dist-build/*
 
   release:
@@ -64,8 +54,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            mac-build/*.dmg
-            win-build/*.exe
+            windows-build/*.exe
           draft: false
           prerelease: false
           generate_release_notes: true
