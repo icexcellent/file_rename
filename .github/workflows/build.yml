@@ -50,7 +50,6 @@ jobs:
           npm rebuild sharp
           npm rebuild tesseract.js-core
         timeout-minutes: 15
-        retries: 2
 
       - name: Build application
         run: |
@@ -61,7 +60,6 @@ jobs:
           )
           npm run build
         timeout-minutes: 15
-        retries: 2
 
       - name: Build Electron app
         run: |
