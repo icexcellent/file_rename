@@ -11,7 +11,7 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30  # 添加超时设置
+    timeout-minutes: 45  # 增加超时时间
     strategy:
       matrix:
         os: [macos-latest, windows-latest]
@@ -34,19 +34,34 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Clear npm cache (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          npm cache clean --force
+          npm cache verify
+        shell: cmd
 
       - name: Install dependencies
         run: |
-          npm ci
+          npm ci --no-audit --no-fund --prefer-offline
           # 重新构建sharp等原生模块
           npm rebuild sharp
           npm rebuild tesseract.js-core
+        timeout-minutes: 15
+        retries: 2
 
       - name: Build application
         run: |
-          export NODE_OPTIONS="--max-old-space-size=4096"
-          timeout 600 npm run build
-        timeout-minutes: 10
+          if "%{{ matrix.os }}"=="windows-latest" (
+            set NODE_OPTIONS=--max-old-space-size=4096
+          ) else (
+            export NODE_OPTIONS=--max-old-space-size=4096
+          )
+          npm run build
+        timeout-minutes: 15
+        retries: 2
 
       - name: Build Electron app
         run: |
@@ -59,7 +74,7 @@ jobs:
             chmod +x scripts/build-ci.sh
             ./scripts/build-ci.sh
           fi
-        timeout-minutes: 20
+        timeout-minutes: 25
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -68,6 +83,7 @@ jobs:
         with:
           name: ${{ matrix.platform }}-build
           path: dist-build/*
+          retention-days: 7
 
   release:
     needs: build
