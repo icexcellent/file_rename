@@ -63,11 +63,34 @@ jobs:
         timeout-minutes: 20
         shell: cmd
 
+      - name: Verify dependencies
+        run: |
+          echo "=== 验证依赖安装 ==="
+          echo "检查node_modules目录:"
+          dir node_modules | findstr "vite"
+          dir node_modules | findstr "typescript"
+          echo "检查vite是否可用:"
+          npx vite --version
+          echo "检查tsc是否可用:"
+          npx tsc --version
+          echo "=== 依赖验证完成 ==="
+        timeout-minutes: 5
+        shell: cmd
+
       - name: Build application
         run: |
+          echo "=== 开始构建应用 ==="
           set NODE_OPTIONS=--max-old-space-size=4096
+          echo "NODE_OPTIONS设置为: %NODE_OPTIONS%"
+          
+          echo "=== 构建渲染进程 ==="
           npm run build:renderer
-        timeout-minutes: 15
+          
+          echo "=== 构建主进程 ==="
+          npm run build:main
+          
+          echo "=== 应用构建完成 ==="
+        timeout-minutes: 20
         shell: cmd
 
       - name: Build Electron app
