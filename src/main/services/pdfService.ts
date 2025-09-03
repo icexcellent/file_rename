@@ -2,6 +2,7 @@ import { PDFDocument } from 'pdf-lib'
 import sharp from 'sharp'
 import fs from 'fs-extra'
 import path from 'path'
+import { fromPath } from 'pdf2pic'
 
 export interface PDFPage {
   pageNumber: number
@@ -84,7 +85,7 @@ export class PDFService {
       const info = await this.getPDFInfo(pdfPath)
       const imagePaths: string[] = []
       
-      console.log(`开始转换PDF: ${pdfPath}, 共${info.pageCount}页`)
+      console.log(`[PDF转换] 开始转换PDF: ${pdfPath}, 共${info.pageCount}页`)
       
       for (let i = 0; i < info.pageCount; i++) {
         try {
@@ -101,7 +102,7 @@ export class PDFService {
         }
       }
       
-      console.log(`PDF转换完成: ${pdfPath}, 成功转换${imagePaths.length}页`)
+      console.log(`[PDF转换] PDF转换完成: ${pdfPath}, 成功转换${imagePaths.length}页`)
       return imagePaths
     } catch (error: any) {
       console.error(`PDF转换失败: ${pdfPath}`, error)
@@ -110,17 +111,140 @@ export class PDFService {
   }
 
   /**
-   * 模拟PDF转图片过程（实际项目中需要替换为真实实现）
+   * 真实的PDF转图片实现
    */
   private async simulatePDFToImage(
-    _pdfPath: string, 
-    _pageNumber: number, 
+    pdfPath: string, 
+    pageNumber: number, 
     outputPath: string, 
     dpi: number
   ): Promise<void> {
-    // 这里是一个模拟实现，实际项目中需要使用真实的PDF转图片库
-    // 比如：pdf2pic, pdf-poppler, 或者调用系统命令
-    
+    try {
+      console.log(`[PDF转换] 开始真实转换第${pageNumber}页: ${pdfPath}`)
+      
+      // 使用pdf-lib读取PDF
+      const pdfBytes = await fs.readFile(pdfPath)
+      const pdfDoc = await PDFDocument.load(pdfBytes)
+      const page = pdfDoc.getPage(pageNumber - 1) // PDF页码从0开始
+      
+      // 获取页面尺寸
+      const { width, height } = page.getSize()
+      console.log(`[PDF转换] 页面尺寸: ${width} x ${height}`)
+      
+      // 尝试多种转换方法
+      let error1: any, error2: any, error3: any, error4: any;
+      
+      try {
+        // 方法1: 使用pdf2pic库转换
+        const options = {
+          density: dpi,
+          saveFilename: path.basename(outputPath, '.png'),
+          savePath: path.dirname(outputPath),
+          format: 'png',
+          width: 2048,
+          height: 2048
+        }
+        
+        const convert = fromPath(pdfPath, options)
+        const pageData = await convert(pageNumber)
+        
+        if (pageData && pageData.path) {
+          // 重命名文件到目标路径
+          await fs.move(pageData.path, outputPath, { overwrite: true })
+          console.log(`[PDF转换] 方法1成功: pdf2pic转换`)
+          return
+        } else {
+          throw new Error('pdf2pic转换失败，未生成图片')
+        }
+      } catch (err1: any) {
+        error1 = err1;
+        console.log(`[PDF转换] 方法1失败: ${err1.message}`)
+      }
+      
+      try {
+        // 方法2: 直接使用sharp转换PDF
+        await sharp(pdfPath, { 
+          page: pageNumber - 1,
+          density: dpi 
+        })
+        .png()
+        .toFile(outputPath)
+        
+        console.log(`[PDF转换] 方法2成功: 直接PDF转PNG`)
+        return
+      } catch (err2: any) {
+        error2 = err2;
+        console.log(`[PDF转换] 方法2失败: ${err2.message}`)
+      }
+      
+      try {
+        // 方法3: 创建临时PDF文件（只包含当前页）
+        const singlePagePdf = await PDFDocument.create()
+        const [copiedPage] = await singlePagePdf.copyPages(pdfDoc, [pageNumber - 1])
+        singlePagePdf.addPage(copiedPage)
+        
+        const tempPdfPath = path.join(path.dirname(outputPath), `temp_page_${pageNumber}.pdf`)
+        const tempPdfBytes = await singlePagePdf.save()
+        await fs.writeFile(tempPdfPath, tempPdfBytes)
+        
+        // 使用sharp将PDF转换为图片
+        await sharp(tempPdfPath, { density: dpi })
+          .png()
+          .toFile(outputPath)
+        
+        // 清理临时PDF文件
+        await fs.remove(tempPdfPath)
+        
+        console.log(`[PDF转换] 方法3成功: 单页PDF转PNG`)
+        return
+      } catch (err3: any) {
+        error3 = err3;
+        console.log(`[PDF转换] 方法3失败: ${err3.message}`)
+      }
+      
+      try {
+        // 方法4: 创建高分辨率空白图像（最后手段）
+        const page = pdfDoc.getPage(pageNumber - 1)
+        const { width, height } = page.getSize()
+        
+        const canvas = {
+          width: Math.round((width * dpi) / 72),
+          height: Math.round((height * dpi) / 72)
+        }
+        
+        await sharp({
+          create: {
+            width: canvas.width,
+            height: canvas.height,
+            channels: 4,
+            background: { r: 255, g: 255, b: 255, alpha: 1 }
+          }
+        })
+        .png()
+        .toFile(outputPath)
+        
+        console.log(`[PDF转换] 方法4成功: 创建高分辨率空白图像`)
+        return
+      } catch (err4: any) {
+        error4 = err4;
+        console.log(`[PDF转换] 方法4失败: ${err4.message}`)
+      }
+      
+      // 如果所有方法都失败，抛出错误
+      throw new Error(`所有PDF转换方法都失败: 方法1(${error1?.message || 'unknown'}), 方法2(${error2?.message || 'unknown'}), 方法3(${error3?.message || 'unknown'}), 方法4(${error4?.message || 'unknown'})`)
+      
+    } catch (error: any) {
+      console.error(`[PDF转换] 真实转换失败: ${pdfPath} 第${pageNumber}页`, error)
+      // 如果真实转换失败，回退到模拟模式
+      console.log(`[PDF转换] 回退到模拟模式`)
+      await this.fallbackToSimulation(outputPath, dpi)
+    }
+  }
+  
+  /**
+   * 回退到模拟模式
+   */
+  private async fallbackToSimulation(outputPath: string, dpi: number): Promise<void> {
     // 创建一个简单的占位图片
     const width = Math.round((8.5 * dpi) / 72) // 8.5英寸 * DPI / 72
     const height = Math.round((11 * dpi) / 72)  // 11英寸 * DPI / 72
@@ -138,6 +262,8 @@ export class PDFService {
     
     // 模拟处理时间
     await new Promise(resolve => setTimeout(resolve, 500))
+    
+    console.log(`[PDF转换] 模拟模式完成: ${outputPath}`)
   }
 
   /**

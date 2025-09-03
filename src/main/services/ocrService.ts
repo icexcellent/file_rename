@@ -18,14 +18,14 @@ export class OCRService {
     if (this.isInitialized) return
 
     try {
-      this.worker = await createWorker('chi_sim+eng', 1, {
-        logger: (m) => console.log('OCR:', m),
-        errorHandler: (err) => console.error('OCR Error:', err),
+      // 使用中文模型，获得更好的中文识别效果
+      this.worker = await createWorker('chi_sim', 1, {
+        logger: (m) => console.log('[OCR]', m),
+        errorHandler: (err) => console.error('[OCR Error]', err),
       })
 
-      // 设置OCR参数
+      // 使用最基本的参数设置
       await this.worker.setParameters({
-        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz中文汉字',
         tessedit_pageseg_mode: '1', // 自动页面分割
         tessedit_ocr_engine_mode: '3', // 默认引擎
       })
@@ -59,16 +59,22 @@ export class OCRService {
         throw new Error(`文件过大: ${fileSizeInMB.toFixed(2)}MB，超过100MB限制`)
       }
 
-      console.log(`开始OCR识别: ${imagePath}`)
+      console.log(`[OCR] 开始识别图片: ${imagePath}`)
+      console.log(`[OCR] 文件大小: ${fileSizeInMB.toFixed(2)}MB`)
+      console.log(`[OCR] 使用语言: chi_sim`)
       
+      // 暂时跳过图像预处理，直接识别
       const result = await this.worker.recognize(imagePath)
       
-      console.log(`OCR识别完成: ${imagePath}, 置信度: ${result.data.confidence}%`)
+      console.log(`[OCR] 识别完成: ${imagePath}`)
+      console.log(`[OCR] 识别文本长度: ${result.data.text.length} 字符`)
+      console.log(`[OCR] 识别文本预览: ${result.data.text.substring(0, 200)}...`)
+      console.log(`[OCR] 置信度: ${result.data.confidence}%`)
       
       return {
         text: result.data.text.trim(),
         confidence: result.data.confidence,
-        language: 'chi_sim+eng'
+        language: 'chi_sim'
       }
     } catch (error: any) {
       console.error(`OCR识别失败: ${imagePath}`, error)
@@ -97,7 +103,7 @@ export class OCRService {
         results.push({
           text: '',
           confidence: 0,
-          language: 'chi_sim+eng'
+          language: 'chi_sim'
         })
       }
     }
@@ -117,11 +123,13 @@ export class OCRService {
     }
   }
 
+  // 暂时移除图像预处理功能，简化OCR流程
+  
   /**
    * 获取支持的语言列表
    */
   getSupportedLanguages(): string[] {
-    return ['chi_sim', 'eng', 'chi_sim+eng']
+    return ['chi_sim']
   }
 }
 

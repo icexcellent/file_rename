@@ -1,0 +1,299 @@
+.rename-operation {
+  padding: 24px;
+  background: linear-gradient(135deg, #fafafa 0%, #e5e5e5 100%);
+  min-height: 100vh;
+}
+
+.rename-operation .ant-typography {
+  color: #2c3e50;
+  margin-bottom: 24px;
+  text-align: left;
+  font-weight: 600;
+}
+
+/* 页面标题栏 */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 16px 24px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.page-header .ant-typography {
+  margin-bottom: 0;
+  text-align: left;
+}
+
+.page-header .ant-btn {
+  margin: 0;
+}
+
+.operation-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.operation-card .ant-card-head,
+.rename-operation .operation-card .ant-card-head {
+  background: #3b82f6 !important;
+  color: white !important;
+  border-bottom: none !important;
+  padding: 16px 24px !important;
+}
+
+.operation-card .ant-card-body {
+  padding: 24px;
+}
+
+/* 文件选择区域 */
+.file-selection-area {
+  border: 2px dashed #d9d9d9;
+  border-radius: 12px;
+  padding: 32px;
+  text-align: center;
+  background: #fafafa;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.file-selection-area:hover {
+  border-color: #667eea;
+  background: #f0f8ff;
+}
+
+.file-selection-area.dragover {
+  border-color: #667eea;
+  background: #e6f7ff;
+  transform: scale(1.02);
+}
+
+.file-selection-area .anticon {
+  font-size: 48px;
+  color: #bfbfbf;
+  margin-bottom: 16px;
+}
+
+.file-selection-area:hover .anticon {
+  color: #667eea;
+}
+
+.file-selection-area .ant-typography {
+  color: #8c8c8c;
+  margin-bottom: 8px;
+}
+
+.file-selection-area .ant-typography-secondary {
+  color: #bfbfbf;
+  font-size: 14px;
+}
+
+/* 文件列表 */
+.file-list {
+  margin-top: 16px;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+.file-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.file-item .file-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.file-item .file-icon {
+  margin-right: 12px;
+  font-size: 20px;
+  color: #667eea;
+}
+
+.file-item .file-details {
+  flex: 1;
+}
+
+.file-item .file-name {
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 4px;
+}
+
+.file-item .file-size {
+  color: #8c8c8c;
+  font-size: 12px;
+}
+
+.file-item .file-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 配置选项 */
+.config-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.config-option {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.config-option .ant-form-item-label > label {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+/* 进度条 */
+.progress-section {
+  margin-top: 24px;
+}
+
+.progress-section .ant-progress {
+  margin-bottom: 16px;
+}
+
+.progress-section .ant-progress-bg {
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+/* 日志区域 */
+.log-section {
+  margin-top: 24px;
+}
+
+.log-content {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 16px;
+  border-radius: 8px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* 执行日志样式 */
+.execution-log {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 16px;
+  min-height: 300px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.execution-log::-webkit-scrollbar {
+  width: 8px;
+}
+
+.execution-log::-webkit-scrollbar-track {
+  background: #f1f3f4;
+  border-radius: 4px;
+}
+
+.execution-log::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.execution-log::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.log-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.log-content::-webkit-scrollbar-track {
+  background: #2d2d2d;
+  border-radius: 4px;
+}
+
+.log-content::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+.log-content::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* 按钮样式 */
+.rename-operation .ant-btn {
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  height: 40px;
+  padding: 0 24px;
+}
+
+.rename-operation .ant-btn-primary {
+  background: #3b82f6;
+  border: none;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  color: white;
+}
+
+.rename-operation .ant-btn-primary:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  color: white;
+}
+
+.rename-operation .ant-btn:not(.ant-btn-primary) {
+  border: 1px solid #d9d9d9;
+  color: #595959;
+}
+
+.rename-operation .ant-btn:not(.ant-btn-primary):hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .rename-operation {
+    padding: 16px;
+  }
+  
+  .operation-card .ant-card-body {
+    padding: 16px;
+  }
+  
+  .file-selection-area {
+    padding: 24px 16px;
+  }
+  
+  .config-options {
+    grid-template-columns: 1fr;
+  }
+}

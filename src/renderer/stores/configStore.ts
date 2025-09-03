@@ -21,7 +21,7 @@ interface ConfigStore {
 
 const defaultConfig: Config = {
   deepseekApiKey: '',
-  textExtractionLength: 120,
+  textExtractionLength: 2000,
   maxFileNameLength: 60,
   convertToLowercase: false,
   convertSpacesToUnderscores: false,

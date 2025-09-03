@@ -1,6 +1,8 @@
-import React, { useState } from 'react'
-import { Card, Typography, Progress, Table, Button, Space, Tag, Statistic, Row, Col } from 'antd'
-import { DownloadOutlined, ReloadOutlined, FileTextOutlined } from '@ant-design/icons'
+import React from 'react'
+import { Card, Typography, Progress, Table, Button, Space, Tag, Statistic, Row, Col, Tooltip } from 'antd'
+import { DownloadOutlined, ReloadOutlined, FileTextOutlined, DeleteOutlined } from '@ant-design/icons'
+import { useRenameStore } from '../stores/renameStore'
+import './ExecutionResults.css'
 
 const { Title, Text } = Typography
 
@@ -14,8 +16,7 @@ interface ExecutionResult {
 }
 
 const ExecutionResults: React.FC = () => {
-  const [results, setResults] = useState<ExecutionResult[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  const { results, isProcessing, clearResults, clearLogs } = useRenameStore()
 
   // 模拟数据
   const mockResults: ExecutionResult[] = [
@@ -44,12 +45,8 @@ const ExecutionResults: React.FC = () => {
   ]
 
   const handleRefresh = () => {
-    setIsLoading(true)
-    // 模拟刷新
-    setTimeout(() => {
-      setResults(mockResults)
-      setIsLoading(false)
-    }, 1000)
+    // 刷新功能已通过全局状态自动更新
+    console.log('刷新执行结果')
   }
 
   const handleExportLog = () => {
@@ -60,48 +57,60 @@ const ExecutionResults: React.FC = () => {
   const columns = [
     {
       title: '原文件名',
-      dataIndex: 'originalFileName',
-      key: 'originalFileName',
+      dataIndex: 'originalPath',
+      key: 'originalPath',
       width: '30%',
-      render: (text: string) => (
-        <Text copyable style={{ maxWidth: '200px', display: 'block' }}>
-          {text}
-        </Text>
-      )
+      render: (text: string) => {
+        const fileName = text ? text.split('/').pop() || text : '-'
+        return (
+          <Tooltip title={text || '-'} placement="top">
+            <Text copyable style={{ maxWidth: '200px', display: 'block' }}>
+              {fileName}
+            </Text>
+          </Tooltip>
+        )
+      }
     },
     {
       title: '新文件名',
-      dataIndex: 'newFileName',
-      key: 'newFileName',
+      dataIndex: 'newPath',
+      key: 'newPath',
       width: '30%',
-      render: (text: string) => (
-        <Text copyable style={{ maxWidth: '200px', display: 'block' }}>
-          {text || '-'}
-        </Text>
-      )
+      render: (text: string) => {
+        const fileName = text ? text.split('/').pop() || text : '-'
+        return (
+          <Tooltip title={text || '-'} placement="top">
+            <Text copyable style={{ maxWidth: '200px', display: 'block' }}>
+              {fileName}
+            </Text>
+          </Tooltip>
+        )
+          }
     },
     {
-      title: '操作',
-      dataIndex: 'operation',
-      key: 'operation',
+      title: '状态',
+      dataIndex: 'success',
+      key: 'success',
       width: '15%',
-      render: (operation: string) => {
-        const color = operation === 'success' ? 'green' : operation === 'failed' ? 'red' : 'orange'
-        const text = operation === 'success' ? '成功' : operation === 'failed' ? '失败' : '跳过'
+      render: (success: boolean) => {
+        const color = success ? 'green' : 'red'
+        const text = success ? '成功' : '失败'
         return <Tag color={color}>{text}</Tag>
       }
     },
     {
       title: '时间',
-      dataIndex: 'time',
-      key: 'time',
+      dataIndex: 'timestamp',
+      key: 'timestamp',
       width: '25%'
     }
   ]
 
-  const successCount = results.filter(r => r.operation === 'success').length
-  const failedCount = results.filter(r => r.operation === 'failed').length
+  // 计算统计数据
   const totalCount = results.length
+  const successCount = results.filter(r => r.success).length
+  const failedCount = results.filter(r => !r.success).length
+  const successRate = totalCount > 0 ? Math.round((successCount / totalCount) * 100) : 0
 
   return (
     <div className="execution-results">
@@ -164,7 +173,6 @@ const ExecutionResults: React.FC = () => {
             <Button 
               icon={<ReloadOutlined />}
               onClick={handleRefresh}
-              loading={isLoading}
             >
               刷新
             </Button>
@@ -200,7 +208,7 @@ const ExecutionResults: React.FC = () => {
               }
               return null
             },
-            rowExpandable: (record) => record.operation === 'failed' && !!record.errorReason
+            rowExpandable: (record) => !record.success && !!record.errorReason
           }}
           locale={{
             emptyText: '暂无执行结果，请先执行重命名操作'

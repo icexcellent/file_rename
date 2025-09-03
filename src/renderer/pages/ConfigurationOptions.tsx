@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Button, Input, InputNumber, Checkbox, Space, Card, Typography, message, Alert } from 'antd'
 import { RobotOutlined, SettingOutlined, FileTextOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons'
 import { useConfigStore } from '../stores/configStore'
+import './ConfigurationOptions.css'
 
 const { Title, Text } = Typography
 
@@ -49,7 +50,17 @@ const ConfigurationOptions: React.FC = () => {
 
   return (
     <div className="configuration-options">
-      <Title level={3}>配置选项</Title>
+      <div className="title-row">
+        <Title level={3}>配置选项</Title>
+        <Button 
+          type="primary" 
+          size="large"
+          icon={<FileTextOutlined />}
+          onClick={() => message.success('配置已保存')}
+        >
+          保存配置
+        </Button>
+      </div>
       
       {/* DeepSeek API配置 */}
       <Card 
@@ -231,17 +242,6 @@ const ConfigurationOptions: React.FC = () => {
         </Space>
       </Card>
 
-      {/* 保存配置 */}
-      <Card className="config-card">
-        <Button 
-          type="primary" 
-          size="large"
-          icon={<FileTextOutlined />}
-          onClick={() => message.success('配置已保存')}
-        >
-          保存配置
-        </Button>
-      </Card>
     </div>
   )
 }

@@ -1,0 +1,253 @@
+.configuration-options {
+  padding: 24px;
+  background: linear-gradient(135deg, #fafafa 0%, #e5e5e5 100%);
+  min-height: 100vh;
+}
+
+.configuration-options .ant-typography {
+  color: #2c3e50;
+  margin-bottom: 24px;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* 标题行 */
+.title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 0;
+}
+
+.title-row .ant-typography {
+  margin-bottom: 0;
+  text-align: left;
+}
+
+.title-row .ant-btn {
+  margin: 0;
+}
+
+/* 页面标题栏 */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 16px 24px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.page-header .ant-typography {
+  margin-bottom: 0;
+  text-align: left;
+}
+
+.page-header .ant-btn {
+  margin: 0;
+}
+
+.config-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.config-card .ant-card-head,
+.configuration-options .config-card .ant-card-head {
+  background: #3b82f6 !important;
+  color: white !important;
+  border-bottom: none !important;
+  padding: 16px 24px !important;
+}
+
+.config-card .ant-card-head-title {
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.config-card .ant-card-body {
+  padding: 24px;
+}
+
+/* 配置表单 */
+.config-form {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.config-form .ant-form-item {
+  margin-bottom: 24px;
+}
+
+.config-form .ant-form-item-label > label {
+  font-weight: 500;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.config-form .ant-input,
+.config-form .ant-input-number,
+.config-form .ant-select-selector {
+  border-radius: 8px;
+  border: 1px solid #d9d9d9;
+  transition: all 0.3s ease;
+}
+
+.config-form .ant-input:focus,
+.config-form .ant-input-number:focus,
+.config-form .ant-select-focused .ant-select-selector {
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.config-form .ant-input:hover,
+.config-form .ant-input-number:hover,
+.config-form .ant-select:hover .ant-select-selector {
+  border-color: #667eea;
+}
+
+/* API密钥输入框 */
+.api-key-input {
+  position: relative;
+}
+
+.api-key-input .ant-input {
+  padding-right: 40px;
+}
+
+.api-key-input .visibility-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #8c8c8c;
+  transition: color 0.3s ease;
+}
+
+.api-key-input .visibility-toggle:hover {
+  color: #667eea;
+}
+
+/* 开关样式 */
+.config-form .ant-switch {
+  background-color: #d9d9d9;
+}
+
+.config-form .ant-switch-checked {
+  background-color: #667eea;
+}
+
+/* 按钮样式 */
+.config-form .ant-btn {
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  height: 40px;
+  padding: 0 24px;
+  margin-right: 12px;
+}
+
+.config-form .ant-btn-primary {
+  background: #3b82f6;
+  border: none;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.config-form .ant-btn-primary:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.config-form .ant-btn:not(.ant-btn-primary) {
+  border: 1px solid #d9d9d9;
+  color: #595959;
+}
+
+.config-form .ant-btn:not(.ant-btn-primary):hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+/* 测试结果 */
+.test-result {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.test-result.success {
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  color: #52c41a;
+}
+
+.test-result.error {
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  color: #ff4d4f;
+}
+
+.test-result .anticon {
+  margin-right: 8px;
+}
+
+/* 帮助文本 */
+.help-text {
+  color: #8c8c8c;
+  font-size: 12px;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* 配置项分组 */
+.config-group {
+  background: #fafafa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  border: 1px solid #f0f0f0;
+}
+
+.config-group .group-title {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 16px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.config-group .group-title .anticon {
+  margin-right: 8px;
+  color: #667eea;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .configuration-options {
+    padding: 16px;
+  }
+  
+  .config-card .ant-card-body {
+    padding: 16px;
+  }
+  
+  .config-form {
+    max-width: 100%;
+  }
+  
+  .config-group {
+    padding: 16px;
+  }
+}

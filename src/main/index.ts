@@ -7,6 +7,23 @@ import { ocrService } from './services/ocrService'
 // 配置存储
 const store = new Store()
 
+// 设置默认配置
+const defaultConfig = {
+  deepseekApiKey: '',
+  textExtractionLength: 2000,
+  maxFileNameLength: 60,
+  convertToLowercase: false,
+  convertSpacesToUnderscores: false,
+  imageFiles: true,
+  pdfFiles: true,
+  documentFiles: true,
+}
+
+// 确保配置存在
+if (!store.has('config')) {
+  store.set('config', defaultConfig)
+}
+
 // 开发环境判断
 const isDev = process.env.IS_DEV === 'true'
 
@@ -34,6 +51,8 @@ function createWindow() {
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173')
     mainWindow.webContents.openDevTools()
+    // 开发模式下使用开发环境的preload脚本
+    mainWindow.webContents.session.setPreloads([path.join(__dirname, 'preload.dev.js')])
   } else {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
   }

@@ -38,10 +38,6 @@ const App: React.FC = () => {
     <ConfigProvider locale={zhCN}>
       <AntApp>
         <div className="app-container">
-          <header className="app-header">
-            <h1>智能文件重命名工具</h1>
-          </header>
-          
           <main className="app-main">
             <div className="tab-container">
               <div className="tab-header">
