@@ -1,15 +1,11 @@
 import React, { useEffect } from 'react'
 import { Button, Input, Radio, Space, Card, Typography, message, Progress, Alert } from 'antd'
-import { FolderOpenOutlined, FileOutlined, DeleteOutlined, PlayCircleOutlined, RollbackOutlined, StopOutlined } from '@ant-design/icons'
+import { FolderOpenOutlined, FileOutlined, PlayCircleOutlined, RollbackOutlined, StopOutlined } from '@ant-design/icons'
 import { useConfigStore } from '../stores/configStore'
 import { useRenameStore, RenameResult, RenameProgress } from '../stores/renameStore'
 import './RenameOperation.css'
 
 const { Title, Text } = Typography
-
-// 使用全局状态中的类型定义
-
-// 使用全局状态中的类型定义
 
 const RenameOperation: React.FC = () => {
   const { config } = useConfigStore()
@@ -19,7 +15,6 @@ const RenameOperation: React.FC = () => {
     storageMode,
     isProcessing,
     progress,
-    results,
     executionLog,
     setSelectedFiles,
     setTargetDirectory,
@@ -97,11 +92,7 @@ const RenameOperation: React.FC = () => {
     }
   }
 
-  const handleClearSelection = () => {
-    clearAll()
-    handleAddLog('已清除选择')
-    message.info('已清除选择')
-  }
+
 
   const handleStartRename = async () => {
     if (selectedFiles.length === 0) {

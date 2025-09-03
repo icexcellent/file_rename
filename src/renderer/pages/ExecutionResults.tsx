@@ -1,48 +1,13 @@
 import React from 'react'
 import { Card, Typography, Progress, Table, Button, Space, Tag, Statistic, Row, Col, Tooltip } from 'antd'
-import { DownloadOutlined, ReloadOutlined, FileTextOutlined, DeleteOutlined } from '@ant-design/icons'
+import { DownloadOutlined, ReloadOutlined, FileTextOutlined } from '@ant-design/icons'
 import { useRenameStore } from '../stores/renameStore'
 import './ExecutionResults.css'
 
 const { Title, Text } = Typography
 
-interface ExecutionResult {
-  id: string
-  originalFileName: string
-  newFileName: string
-  operation: 'success' | 'failed' | 'skipped'
-  time: string
-  errorReason?: string
-}
-
 const ExecutionResults: React.FC = () => {
-  const { results, isProcessing, clearResults, clearLogs } = useRenameStore()
-
-  // 模拟数据
-  const mockResults: ExecutionResult[] = [
-    {
-      id: '1',
-      originalFileName: 'document1.pdf',
-      newFileName: '智能文档分析报告_2024.pdf',
-      operation: 'success',
-      time: '2024-01-15 10:30:25'
-    },
-    {
-      id: '2',
-      originalFileName: 'image1.jpg',
-      newFileName: '会议照片_团队讨论.jpg',
-      operation: 'success',
-      time: '2024-01-15 10:30:30'
-    },
-    {
-      id: '3',
-      originalFileName: 'large_file.pdf',
-      newFileName: '',
-      operation: 'failed',
-      time: '2024-01-15 10:30:35',
-      errorReason: '文件超过100MB限制'
-    }
-  ]
+  const { results } = useRenameStore()
 
   const handleRefresh = () => {
     // 刷新功能已通过全局状态自动更新
@@ -110,7 +75,6 @@ const ExecutionResults: React.FC = () => {
   const totalCount = results.length
   const successCount = results.filter(r => r.success).length
   const failedCount = results.filter(r => !r.success).length
-  const successRate = totalCount > 0 ? Math.round((successCount / totalCount) * 100) : 0
 
   return (
     <div className="execution-results">
@@ -198,7 +162,7 @@ const ExecutionResults: React.FC = () => {
           }}
           expandable={{
             expandedRowRender: (record) => {
-              if (record.operation === 'failed' && record.errorReason) {
+              if (!record.success && record.errorReason) {
                 return (
                   <div style={{ padding: '16px', backgroundColor: '#fafafa' }}>
                     <Text strong>失败原因：</Text>
