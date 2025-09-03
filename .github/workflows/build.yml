@@ -66,7 +66,7 @@ jobs:
       - name: Build application
         run: |
           set NODE_OPTIONS=--max-old-space-size=4096
-          npm run build
+          npx tsc && npm run build:renderer
         timeout-minutes: 15
         shell: cmd
 

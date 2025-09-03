@@ -31,10 +31,10 @@ if %ERRORLEVEL% neq 0 (
 
 REM 构建主进程
 echo === 构建主进程 ===
-call npm run build:main
+call npx tsc -p tsconfig.main.json
 if %ERRORLEVEL% neq 0 (
     echo 主进程构建失败，重试中...
-    call npm run build:main
+    call npx tsc -p tsconfig.main.json
     if %ERRORLEVEL% neq 0 (
         set /a ERROR_COUNT+=1
         echo 主进程构建最终失败
