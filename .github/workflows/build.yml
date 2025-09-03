@@ -69,10 +69,27 @@ jobs:
           echo "检查node_modules目录:"
           dir node_modules | findstr "vite"
           dir node_modules | findstr "typescript"
+          
+          echo "检查node_modules/.bin目录:"
+          dir node_modules\.bin | findstr "vite"
+          dir node_modules\.bin | findstr "tsc"
+          
           echo "检查vite是否可用:"
-          npx vite --version
+          if exist "node_modules\.bin\vite.cmd" (
+            echo "找到vite.cmd，测试执行:"
+            node_modules\.bin\vite.cmd --version
+          ) else (
+            echo "未找到vite.cmd"
+          )
+          
           echo "检查tsc是否可用:"
-          npx tsc --version
+          if exist "node_modules\.bin\tsc.cmd" (
+            echo "找到tsc.cmd，测试执行:"
+            node_modules\.bin\tsc.cmd --version
+          ) else (
+            echo "未找到tsc.cmd"
+          )
+          
           echo "=== 依赖验证完成 ==="
         timeout-minutes: 5
         shell: cmd
