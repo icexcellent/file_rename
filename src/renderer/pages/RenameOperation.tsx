@@ -160,6 +160,34 @@ const RenameOperation: React.FC = () => {
       handleAddLog(`[配置检查] API密钥前8位: ${config.deepseekApiKey.substring(0, 8)}...`)
     }
 
+    // 执行系统检查
+    try {
+      handleAddLog('[系统检查] 开始检查系统依赖...')
+      if (window.electronAPI && window.electronAPI.checkSystem) {
+        const systemCheckResult = await window.electronAPI.checkSystem()
+        if (systemCheckResult.success) {
+          handleAddLog(`[系统检查] 系统信息: ${systemCheckResult.systemInfo.platform} ${systemCheckResult.systemInfo.arch}`)
+          handleAddLog(`[系统检查] Node.js版本: ${systemCheckResult.systemInfo.nodeVersion}`)
+          handleAddLog(`[系统检查] 工作目录: ${systemCheckResult.systemInfo.workingDirectory}`)
+          
+          // 记录依赖状态
+          systemCheckResult.dependencies.forEach((dep: any) => {
+            if (dep.available) {
+              handleAddLog(`[系统检查] ✓ ${dep.name}: ${dep.version}`)
+            } else {
+              handleAddLog(`[系统检查] ✗ ${dep.name}: ${dep.error}`)
+            }
+          })
+        } else {
+          handleAddLog(`[系统检查] 系统检查失败: ${systemCheckResult.error}`)
+        }
+      } else {
+        handleAddLog('[系统检查] 系统检查API不可用')
+      }
+    } catch (error: any) {
+      handleAddLog(`[系统检查] 系统检查异常: ${error.message}`)
+    }
+
     setIsProcessing(true)
     clearResults()
     clearLogs()

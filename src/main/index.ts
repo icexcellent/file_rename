@@ -3,6 +3,7 @@ import path from 'path'
 import Store from 'electron-store'
 import { renameService, RenameOptions } from './services/renameService'
 import { ocrService } from './services/ocrService'
+import { systemCheckService } from './services/systemCheckService'
 
 // 配置存储
 const store = new Store()
@@ -201,6 +202,31 @@ ipcMain.handle('test-deepseek-api', async (_event, apiKey: string) => {
     }
   } catch (error: any) {
     return { success: false, message: `API连接失败: ${error.message}` }
+  }
+})
+
+// 系统检查
+ipcMain.handle('check-system', async () => {
+  try {
+    console.log('[主进程] 开始系统检查...')
+    
+    const systemInfo = await systemCheckService.getSystemInfo()
+    console.log('[主进程] 系统信息:', systemInfo)
+    
+    const dependencies = await systemCheckService.checkDependencies()
+    console.log('[主进程] 依赖检查结果:', dependencies)
+    
+    return {
+      success: true,
+      systemInfo,
+      dependencies
+    }
+  } catch (error: any) {
+    console.error('[主进程] 系统检查失败:', error)
+    return {
+      success: false,
+      error: error.message
+    }
   }
 })
 

@@ -21,6 +21,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // API测试
   testDeepSeekAPI: (apiKey: string) => ipcRenderer.invoke('test-deepseek-api', apiKey),
   
+  // 系统检查
+  checkSystem: () => ipcRenderer.invoke('check-system'),
+  
   // 进度更新
   onProgress: (callback: (progress: any) => void) => {
     ipcRenderer.on('progress-update', (_event, progress) => callback(progress))
@@ -54,6 +57,7 @@ declare global {
       getRenameProgress: () => Promise<any>
       stopRename: () => Promise<boolean>
       testDeepSeekAPI: (apiKey: string) => Promise<any>
+      checkSystem: () => Promise<any>
       onProgress: (callback: (progress: any) => void) => void
       onResult: (callback: (result: any) => void) => void
       onError: (callback: (error: any) => void) => void
