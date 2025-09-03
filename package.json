@@ -11,7 +11,7 @@
     "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
     "dev:vite": "vite",
     "dev:electron": "wait-on tcp:5173 && cross-env IS_DEV=true electron .",
-    "build": "node_modules/.bin/tsc && vite build",
+    "build": "npm run build:renderer",
     "build:renderer": "vite build",
     "build:main": "node_modules/.bin/tsc -p tsconfig.main.json",
     "electron:build": "npm run build:renderer && npm run build:main && electron-builder",
