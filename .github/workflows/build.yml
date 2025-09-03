@@ -42,21 +42,67 @@ jobs:
           npm --version
           echo "工作目录:"
           cd
+          echo "当前目录内容:"
+          dir
           
           # 清理npm缓存
+          echo "=== 清理npm缓存 ==="
           npm cache clean --force
+          npm cache verify
           
           # 设置npm配置
+          echo "=== 设置npm配置 ==="
           npm config set registry https://registry.npmjs.org/
           npm config set fetch-timeout 300000
           npm config set fetch-retries 3
           
+          # 检查package文件
+          echo "=== 检查package文件 ==="
+          if exist "package.json" (
+            echo "找到package.json"
+            type package.json | findstr "name"
+          ) else (
+            echo "ERROR: package.json不存在"
+            exit /b 1
+          )
+          
+          if exist "package-lock.json" (
+            echo "找到package-lock.json"
+          ) else (
+            echo "ERROR: package-lock.json不存在"
+            exit /b 1
+          )
+          
+          # 安装依赖
           echo "=== 开始npm ci ==="
           npm ci --no-audit --no-fund --prefer-offline --verbose
+          if %ERRORLEVEL% neq 0 (
+            echo "ERROR: npm ci 安装失败"
+            exit /b 1
+          )
           
-          echo "=== 依赖安装完成，开始重建原生模块 ==="
+          # 验证依赖安装
+          echo "=== 验证依赖安装 ==="
+          if not exist "node_modules" (
+            echo "ERROR: node_modules目录不存在"
+            exit /b 1
+          )
+          
+          echo "node_modules目录存在，检查内容:"
+          dir node_modules | findstr "vite"
+          dir node_modules | findstr "typescript"
+          
+          # 重建原生模块
+          echo "=== 开始重建原生模块 ==="
           npm rebuild sharp
+          if %ERRORLEVEL% neq 0 (
+            echo "WARNING: sharp重建失败，但继续执行"
+          )
+          
           npm rebuild tesseract.js-core
+          if %ERRORLEVEL% neq 0 (
+            echo "WARNING: tesseract.js-core重建失败，但继续执行"
+          )
           
           echo "=== 依赖安装和重建完成 ==="
           echo "完成时间: %date% %time%"
