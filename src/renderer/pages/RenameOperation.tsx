@@ -74,8 +74,9 @@ const RenameOperation: React.FC = () => {
         // 记录每个文件的详细信息
         files.forEach((file, index) => {
           const fileName = file.split('/').pop() || file
-          const fileSize = require('fs').statSync(file).size
-          handleAddLog(`[文件选择] 文件${index + 1}: ${fileName} (${(fileSize / 1024 / 1024).toFixed(2)}MB)`)
+          // 在渲染进程中无法直接使用fs，只记录文件名和路径
+          handleAddLog(`[文件选择] 文件${index + 1}: ${fileName}`)
+          handleAddLog(`[文件选择] 文件${index + 1}路径: ${file}`)
         })
         
         setSelectedFiles(files)
@@ -99,17 +100,9 @@ const RenameOperation: React.FC = () => {
         const directory = await window.electronAPI.selectDirectory()
         handleAddLog(`[目录选择] 用户选择了目录: ${directory}`)
         
-        // 检查目录权限和空间
-        try {
-          const fs = require('fs')
-          const stats = fs.statSync(directory)
-          const isDirectory = stats.isDirectory()
-          const permissions = fs.accessSync(directory, fs.constants.W_OK) ? '可写' : '不可写'
-          handleAddLog(`[目录选择] 目录类型: ${isDirectory ? '目录' : '非目录'}`)
-          handleAddLog(`[目录选择] 目录权限: ${permissions}`)
-        } catch (dirError: any) {
-          handleAddLog(`[目录选择] 目录检查失败: ${dirError.message}`)
-        }
+        // 在渲染进程中无法直接检查文件系统，只记录目录路径
+        handleAddLog(`[目录选择] 目录路径: ${directory}`)
+        handleAddLog(`[目录选择] 注意: 在渲染进程中无法检查目录权限，将在主进程中验证`)
         
         setTargetDirectory(directory)
         handleAddLog(`[目录选择] 目录选择完成: ${directory}`)
