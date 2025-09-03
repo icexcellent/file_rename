@@ -190,9 +190,42 @@ export class RenameService {
       // 图片文件OCR
       if (['.jpg', '.jpeg', '.png', '.gif', '.bmp'].includes(ext)) {
         console.log(`[文本提取] 检测到图片文件，使用OCR识别`)
-        const ocrResult = await ocrService.recognizeText(filePath)
-        console.log(`[文本提取] OCR提取完成，文本长度: ${ocrResult.text.length}`)
-        return ocrResult.text
+        try {
+          const ocrResult = await ocrService.recognizeText(filePath)
+          console.log(`[文本提取] OCR提取完成，文本长度: ${ocrResult.text.length}`)
+          
+          // 检查OCR结果是否有意义
+          if (ocrResult.text && ocrResult.text.trim().length > 5) {
+            console.log(`[文本提取] OCR结果有效，使用识别文本`)
+            return ocrResult.text
+          } else {
+            console.log(`[文本提取] OCR结果过短或无意义，尝试重新识别`)
+            // 尝试重新初始化OCR服务并重试
+            try {
+              await ocrService.terminate()
+              await ocrService.initialize()
+              const retryResult = await ocrService.recognizeText(filePath)
+              
+              if (retryResult.text && retryResult.text.trim().length > 5) {
+                console.log(`[文本提取] 重试OCR成功，文本长度: ${retryResult.text.length}`)
+                return retryResult.text
+              } else {
+                console.log(`[文本提取] 重试OCR仍然失败，使用文件名`)
+                const fileName = path.basename(filePath, ext)
+                return fileName
+              }
+            } catch (retryError: any) {
+              console.log(`[文本提取] 重试OCR失败: ${retryError.message}`)
+              const fileName = path.basename(filePath, ext)
+              return fileName
+            }
+          }
+        } catch (error: any) {
+          console.log(`[文本提取] 图片OCR识别失败: ${error.message}`)
+          console.log(`[文本提取] 使用文件名作为fallback`)
+          const fileName = path.basename(filePath, ext)
+          return fileName
+        }
       }
       
       // PDF文件处理
@@ -230,18 +263,28 @@ export class RenameService {
       try {
         const ocrResult = await ocrService.recognizeText(filePath)
         console.log(`[文本提取] 其他文件OCR成功，文本长度: ${ocrResult.text.length}`)
-        return ocrResult.text
-      } catch (error) {
-        console.log(`[文本提取] OCR识别失败，使用文件名作为文本: ${filePath}`)
+        
+        // 检查OCR结果是否有意义
+        if (ocrResult.text && ocrResult.text.trim().length > 5) {
+          return ocrResult.text
+        } else {
+          console.log(`[文本提取] OCR结果过短或无意义，使用文件名`)
+          const fileName = path.basename(filePath, ext)
+          console.log(`[文本提取] 使用文件名: ${fileName}`)
+          return fileName
+        }
+      } catch (error: any) {
+        console.log(`[文本提取] OCR识别失败: ${error.message}`)
+        console.log(`[文本提取] 使用文件名作为文本: ${filePath}`)
         const fileName = path.basename(filePath, ext)
         console.log(`[文本提取] 使用文件名: ${fileName}`)
         return fileName
       }
-      
-            } catch (error: any) {
-          console.error(`提取文本失败: ${filePath}`, error)
-          return path.basename(filePath, path.extname(filePath))
-        }
+    } catch (error: any) {
+      console.error(`提取文本失败: ${filePath}`, error)
+      console.log(`[文本提取] 使用文件名作为fallback`)
+      return path.basename(filePath, path.extname(filePath))
+    }
   }
 
     /**

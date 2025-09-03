@@ -153,7 +153,12 @@ export class OCRService {
       const fileHeader = fileBuffer.subarray(0, 8).toString('hex')
       console.log(`[OCR] 文件头部字节: ${fileHeader}`)
       
-      // 暂时跳过图像预处理，直接识别
+      // 检查worker是否真正可用
+      if (!this.worker || !this.worker.recognize) {
+        throw new Error('OCR Worker不可用或recognize方法不存在')
+      }
+      
+      // 尝试识别
       console.log(`[OCR] 开始调用worker.recognize...`)
       const result = await this.worker.recognize(imagePath)
       console.log(`[OCR] worker.recognize调用完成`)
@@ -167,6 +172,27 @@ export class OCRService {
       if (result.data.text.trim().length < 10) {
         console.log(`[OCR] 警告: 识别到的文本过短，可能识别失败或图片内容为空`)
         console.log(`[OCR] 原始文本: "${result.data.text}"`)
+        
+        // 如果识别结果过短，尝试重新初始化服务
+        if (result.data.text.trim().length < 5) {
+          console.log(`[OCR] 识别结果过短，尝试重新初始化OCR服务...`)
+          await this.terminate()
+          await this.initialize()
+          
+          // 重新尝试识别
+          console.log(`[OCR] 重新初始化后再次尝试识别...`)
+          const retryResult = await this.worker.recognize(imagePath)
+          console.log(`[OCR] 重试识别结果: ${retryResult.data.text}`)
+          
+          if (retryResult.data.text.trim().length > 5) {
+            console.log(`[OCR] 重试识别成功，使用重试结果`)
+            return {
+              text: retryResult.data.text.trim(),
+              confidence: retryResult.data.confidence,
+              language: 'chi_sim'
+            }
+          }
+        }
       }
       
       return {
@@ -180,7 +206,26 @@ export class OCRService {
       if (error.stack) {
         console.error(`[OCR] 错误堆栈:`, error.stack)
       }
-      throw new Error(`OCR识别失败: ${error.message}`)
+      
+      // 尝试重新初始化服务
+      console.log(`[OCR] 识别失败，尝试重新初始化OCR服务...`)
+      try {
+        await this.terminate()
+        await this.initialize()
+        console.log(`[OCR] 重新初始化成功，再次尝试识别...`)
+        
+        const retryResult = await this.worker.recognize(imagePath)
+        console.log(`[OCR] 重试识别成功: ${retryResult.data.text}`)
+        
+        return {
+          text: retryResult.data.text.trim(),
+          confidence: retryResult.data.confidence,
+          language: 'chi_sim'
+        }
+      } catch (retryError: any) {
+        console.error(`[OCR] 重试识别也失败: ${retryError.message}`)
+        throw new Error(`OCR识别失败: ${error.message}`)
+      }
     }
   }
 
