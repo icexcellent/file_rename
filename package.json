@@ -73,8 +73,7 @@
       "output": "dist-build"
     },
     "files": [
-      "dist/**/*",
-      "node_modules/**/*"
+      "dist/**/*"
     ],
     "extraResources": [
       {
@@ -83,12 +82,21 @@
         "filter": [
           "**/*"
         ]
+      },
+      {
+        "from": "chi_sim.traineddata",
+        "to": "chi_sim.traineddata"
+      },
+      {
+        "from": "eng.traineddata",
+        "to": "eng.traineddata"
       }
     ],
     "win": {
       "target": "portable",
       "artifactName": "智能文件重命名工具-${version}-portable.exe"
-    }
+    },
+    "asar": false
   },
   "engines": {
     "node": ">=18.0.0",
