@@ -53,11 +53,15 @@ export class OCRService {
       }
       this.sendLog('[OCR] Tesseract.js createWorker函数可用')
       
+      // 检查Tesseract核心文件路径
+      this.checkTesseractCorePath()
+      
       // 使用中文模型，获得更好的中文识别效果
       this.sendLog('[OCR] 开始创建Tesseract Worker，使用语言: chi_sim')
       this.worker = await createWorker('chi_sim', 1, {
         logger: (m) => this.sendLog(`[OCR] ${JSON.stringify(m)}`),
         errorHandler: (err) => this.sendLog(`[OCR Error] ${err}`),
+        corePath: this.getTesseractCorePath(),
       })
       this.sendLog('[OCR] Tesseract Worker创建成功')
 
@@ -252,6 +256,60 @@ export class OCRService {
 
   // 暂时移除图像预处理功能，简化OCR流程
   
+  /**
+   * 检查Tesseract核心文件路径
+   */
+  private checkTesseractCorePath(): void {
+    const corePath = this.getTesseractCorePath()
+    this.sendLog(`[OCR] Tesseract核心文件路径: ${corePath || '默认路径'}`)
+    
+    // 检查路径是否存在
+    if (corePath && fs.existsSync(corePath)) {
+      this.sendLog(`[OCR] ✓ 核心文件路径存在`)
+    } else if (corePath) {
+      this.sendLog(`[OCR] ✗ 核心文件路径不存在，可能导致初始化失败`)
+    } else {
+      this.sendLog(`[OCR] 使用默认核心文件路径`)
+    }
+  }
+
+  /**
+   * 获取Tesseract核心文件路径
+   */
+  private getTesseractCorePath(): string | undefined {
+    // 在开发环境中使用默认路径
+    if (process.env.NODE_ENV === 'development') {
+      return undefined
+    }
+    
+    // 在打包后的环境中，使用extraResources中的路径
+    const platform = process.platform
+    const arch = process.arch
+    
+    if (platform === 'win32') {
+      // Windows
+      if (arch === 'x64') {
+        return path.join(process.resourcesPath, 'tesseract-core', 'tesseract-core-simd.wasm.js')
+      } else {
+        return path.join(process.resourcesPath, 'tesseract-core', 'tesseract-core.wasm.js')
+      }
+    } else if (platform === 'darwin') {
+      // macOS
+      if (arch === 'arm64') {
+        return path.join(process.resourcesPath, 'tesseract-core', 'tesseract-core-simd.wasm.js')
+      } else {
+        return path.join(process.resourcesPath, 'tesseract-core', 'tesseract-core.wasm.js')
+      }
+    } else {
+      // Linux
+      if (arch === 'x64') {
+        return path.join(process.resourcesPath, 'tesseract-core', 'tesseract-core-simd.wasm.js')
+      } else {
+        return path.join(process.resourcesPath, 'tesseract-core', 'tesseract-core.wasm.js')
+      }
+    }
+  }
+
   /**
    * 获取支持的语言列表
    */

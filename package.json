@@ -76,8 +76,7 @@
     },
     "files": [
       "dist/**/*",
-      "node_modules/**/*",
-      "!node_modules/tesseract.js-core/**/*"
+      "node_modules/**/*"
     ],
     "extraResources": [
       {
@@ -96,7 +95,10 @@
     "win": {
       "target": "portable",
       "artifactName": "智能文件重命名工具-${version}-portable.exe",
-      "requestedExecutionLevel": "asInvoker"
+      "requestedExecutionLevel": "asInvoker",
+      "env": {
+        "TESSERACT_CORE_PATH": "./tesseract-core"
+      }
     },
     "linux": {
       "target": "AppImage",
