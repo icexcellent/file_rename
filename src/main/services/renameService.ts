@@ -33,6 +33,26 @@ export interface RenameProgress {
 export class RenameService {
   private isProcessing = false
   private currentProgress: RenameProgress | null = null
+  private logCallback?: (log: string) => void
+
+  /**
+   * 设置日志回调函数
+   */
+  setLogCallback(callback: (log: string) => void) {
+    this.logCallback = callback
+    // 同时设置OCR服务的日志回调
+    ocrService.setLogCallback(callback)
+  }
+
+  /**
+   * 发送日志
+   */
+  private sendLog(message: string) {
+    if (this.logCallback) {
+      this.logCallback(message)
+    }
+    console.log(message)
+  }
 
   /**
    * 开始批量重命名
@@ -51,8 +71,8 @@ export class RenameService {
     const results: RenameResult[] = []
     
     try {
-      console.log(`[批量重命名] 开始批量重命名，文件数量: ${filePaths.length}`)
-      console.log(`[批量重命名] 配置选项:`, JSON.stringify(options, null, 2))
+      this.sendLog(`[批量重命名] 开始批量重命名，文件数量: ${filePaths.length}`)
+      this.sendLog(`[批量重命名] 配置选项: ${JSON.stringify(options, null, 2)}`)
       
       for (let i = 0; i < filePaths.length; i++) {
         const filePath = filePaths[i]
@@ -67,15 +87,15 @@ export class RenameService {
         onProgress?.(this.currentProgress)
         
         try {
-          console.log(`[批量重命名] 开始处理文件 ${i + 1}/${filePaths.length}: ${path.basename(filePath)}`)
+          this.sendLog(`[批量重命名] 开始处理文件 ${i + 1}/${filePaths.length}: ${path.basename(filePath)}`)
           const result = await this.renameFile(filePath, options)
           results.push(result)
           
           if (result.success) {
-            console.log(`[批量重命名] 文件处理成功: ${path.basename(filePath)}`)
+            this.sendLog(`[批量重命名] 文件处理成功: ${path.basename(filePath)}`)
             this.currentProgress.status = 'completed'
           } else {
-            console.log(`[批量重命名] 文件处理失败: ${path.basename(filePath)}, 原因: ${result.errorReason}`)
+            this.sendLog(`[批量重命名] 文件处理失败: ${path.basename(filePath)}, 原因: ${result.errorReason}`)
             this.currentProgress.status = 'failed'
           }
           
@@ -86,7 +106,7 @@ export class RenameService {
             await new Promise(resolve => setTimeout(resolve, 100))
           }
         } catch (error: any) {
-          console.error(`[批量重命名] 文件处理异常: ${path.basename(filePath)}`, error)
+          this.sendLog(`[批量重命名] 文件处理异常: ${path.basename(filePath)} - ${error.message}`)
           const errorResult: RenameResult = {
             originalPath: filePath,
             newPath: '',
@@ -101,8 +121,8 @@ export class RenameService {
       
       const successCount = results.filter(r => r.success).length
       const failedCount = results.filter(r => !r.success).length
-      console.log(`[批量重命名] 批量重命名完成，成功: ${successCount}, 失败: ${failedCount}`)
-      console.log(`[批量重命名] 成功率: ${((successCount / filePaths.length) * 100).toFixed(2)}%`)
+      this.sendLog(`[批量重命名] 批量重命名完成，成功: ${successCount}, 失败: ${failedCount}`)
+      this.sendLog(`[批量重命名] 成功率: ${((successCount / filePaths.length) * 100).toFixed(2)}%`)
       
     } finally {
       this.isProcessing = false
@@ -130,14 +150,14 @@ export class RenameService {
       }
 
       // 提取文本内容
-      console.log(`[重命名] 开始提取文件文本内容`)
+      this.sendLog(`[重命名] 开始提取文件文本内容`)
       const extractedText = await this.extractTextFromFile(filePath, options)
-      console.log(`[重命名] 文本提取完成，长度: ${extractedText.length}`)
+      this.sendLog(`[重命名] 文本提取完成，长度: ${extractedText.length}`)
       
       // 生成新文件名
-      console.log(`[重命名] 开始生成新文件名`)
+      this.sendLog(`[重命名] 开始生成新文件名`)
       const newFileName = await this.generateNewFileName(extractedText, path.extname(filePath), options)
-      console.log(`[重命名] 新文件名生成完成: ${newFileName}`)
+      this.sendLog(`[重命名] 新文件名生成完成: ${newFileName}`)
       
       // 确定目标路径
       let targetPath: string
@@ -199,26 +219,9 @@ export class RenameService {
             console.log(`[文本提取] OCR结果有效，使用识别文本`)
             return ocrResult.text
           } else {
-            console.log(`[文本提取] OCR结果过短或无意义，尝试重新识别`)
-            // 尝试重新初始化OCR服务并重试
-            try {
-              await ocrService.terminate()
-              await ocrService.initialize()
-              const retryResult = await ocrService.recognizeText(filePath)
-              
-              if (retryResult.text && retryResult.text.trim().length > 5) {
-                console.log(`[文本提取] 重试OCR成功，文本长度: ${retryResult.text.length}`)
-                return retryResult.text
-              } else {
-                console.log(`[文本提取] 重试OCR仍然失败，使用文件名`)
-                const fileName = path.basename(filePath, ext)
-                return fileName
-              }
-            } catch (retryError: any) {
-              console.log(`[文本提取] 重试OCR失败: ${retryError.message}`)
-              const fileName = path.basename(filePath, ext)
-              return fileName
-            }
+            console.log(`[文本提取] OCR结果过短或无意义，使用文件名`)
+            const fileName = path.basename(filePath, ext)
+            return fileName
           }
         } catch (error: any) {
           console.log(`[文本提取] 图片OCR识别失败: ${error.message}`)

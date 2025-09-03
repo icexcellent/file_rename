@@ -148,6 +148,11 @@ ipcMain.handle('process-files', async (event, files: string[], options: RenameOp
     event.sender.send('main-process-log', `[主进程] 配置选项: ${JSON.stringify(options, null, 2)}`)
     event.sender.send('main-process-log', `[主进程] DeepSeek API密钥: ${options.deepseekApiKey ? `${options.deepseekApiKey.substring(0, 8)}...` : '未配置'}`)
     
+    // 设置日志回调，让所有服务日志都发送到渲染进程
+    renameService.setLogCallback((log: string) => {
+      event.sender.send('main-process-log', log)
+    })
+    
     // 限制并发数量为100
     if (files.length > 100) {
       throw new Error(`文件数量过多: ${files.length}，最多支持100个文件`)
