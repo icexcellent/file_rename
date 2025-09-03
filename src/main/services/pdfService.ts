@@ -136,6 +136,7 @@ export class PDFService {
       
       try {
         // 方法1: 使用pdf2pic库转换
+        console.log(`[PDF转换] 尝试方法1: pdf2pic转换`)
         const options = {
           density: dpi,
           saveFilename: path.basename(outputPath, '.png'),
@@ -163,6 +164,7 @@ export class PDFService {
       
       try {
         // 方法2: 直接使用sharp转换PDF
+        console.log(`[PDF转换] 尝试方法2: 直接PDF转PNG`)
         await sharp(pdfPath, { 
           page: pageNumber - 1,
           density: dpi 
@@ -179,6 +181,7 @@ export class PDFService {
       
       try {
         // 方法3: 创建临时PDF文件（只包含当前页）
+        console.log(`[PDF转换] 尝试方法3: 单页PDF转PNG`)
         const singlePagePdf = await PDFDocument.create()
         const [copiedPage] = await singlePagePdf.copyPages(pdfDoc, [pageNumber - 1])
         singlePagePdf.addPage(copiedPage)
@@ -204,6 +207,7 @@ export class PDFService {
       
       try {
         // 方法4: 创建高分辨率空白图像（最后手段）
+        console.log(`[PDF转换] 尝试方法4: 创建高分辨率空白图像`)
         const page = pdfDoc.getPage(pageNumber - 1)
         const { width, height } = page.getSize()
         
@@ -231,7 +235,9 @@ export class PDFService {
       }
       
       // 如果所有方法都失败，抛出错误
-      throw new Error(`所有PDF转换方法都失败: 方法1(${error1?.message || 'unknown'}), 方法2(${error2?.message || 'unknown'}), 方法3(${error3?.message || 'unknown'}), 方法4(${error4?.message || 'unknown'})`)
+      const errorSummary = `所有PDF转换方法都失败: 方法1(${error1?.message || 'unknown'}), 方法2(${error2?.message || 'unknown'}), 方法3(${error3?.message || 'unknown'}), 方法4(${error4?.message || 'unknown'})`
+      console.error(`[PDF转换] ${errorSummary}`)
+      throw new Error(errorSummary)
       
     } catch (error: any) {
       console.error(`[PDF转换] 真实转换失败: ${pdfPath} 第${pageNumber}页`, error)
@@ -245,9 +251,13 @@ export class PDFService {
    * 回退到模拟模式
    */
   private async fallbackToSimulation(outputPath: string, dpi: number): Promise<void> {
+    console.log(`[PDF转换] 开始回退到模拟模式: ${outputPath}`)
+    
     // 创建一个简单的占位图片
     const width = Math.round((8.5 * dpi) / 72) // 8.5英寸 * DPI / 72
     const height = Math.round((11 * dpi) / 72)  // 11英寸 * DPI / 72
+    
+    console.log(`[PDF转换] 模拟模式: 创建占位图片 ${width}x${height} 像素`)
     
     await sharp({
       create: {
@@ -264,6 +274,7 @@ export class PDFService {
     await new Promise(resolve => setTimeout(resolve, 500))
     
     console.log(`[PDF转换] 模拟模式完成: ${outputPath}`)
+    console.log(`[PDF转换] 警告: 这是空白占位图片，OCR可能无法识别到有用内容`)
   }
 
   /**

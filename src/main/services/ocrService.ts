@@ -63,6 +63,11 @@ export class OCRService {
       console.log(`[OCR] 文件大小: ${fileSizeInMB.toFixed(2)}MB`)
       console.log(`[OCR] 使用语言: chi_sim`)
       
+      // 检查图片是否为空白图片（通过检查文件大小和内容）
+      if (fileSizeInMB < 0.1) {
+        console.log(`[OCR] 警告: 图片文件过小(${fileSizeInMB.toFixed(3)}MB)，可能是空白占位图片`)
+      }
+      
       // 暂时跳过图像预处理，直接识别
       const result = await this.worker.recognize(imagePath)
       
@@ -70,6 +75,11 @@ export class OCRService {
       console.log(`[OCR] 识别文本长度: ${result.data.text.length} 字符`)
       console.log(`[OCR] 识别文本预览: ${result.data.text.substring(0, 200)}...`)
       console.log(`[OCR] 置信度: ${result.data.confidence}%`)
+      
+      // 检查识别结果是否有意义
+      if (result.data.text.trim().length < 10) {
+        console.log(`[OCR] 警告: 识别到的文本过短，可能识别失败或图片内容为空`)
+      }
       
       return {
         text: result.data.text.trim(),
