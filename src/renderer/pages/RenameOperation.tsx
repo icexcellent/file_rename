@@ -48,6 +48,11 @@ const RenameOperation: React.FC = () => {
         handleAddLog(`✗ 错误: ${error.message}`)
         message.error(`处理错误: ${error.message}`)
       })
+
+      // 监听主进程日志
+      window.electronAPI.onMainProcessLog((log: string) => {
+        handleAddLog(log)
+      })
     }
 
     return () => {
@@ -55,6 +60,7 @@ const RenameOperation: React.FC = () => {
         window.electronAPI.removeAllListeners('progress-update')
         window.electronAPI.removeAllListeners('result-update')
         window.electronAPI.removeAllListeners('error-update')
+        window.electronAPI.removeAllListeners('main-process-log')
       }
     }
   }, [])

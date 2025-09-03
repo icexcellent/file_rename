@@ -135,12 +135,18 @@ ipcMain.handle('set-config', (_event, config) => {
 })
 
 // 文件重命名处理
-ipcMain.handle('process-files', async (_event, files: string[], options: RenameOptions) => {
+ipcMain.handle('process-files', async (event, files: string[], options: RenameOptions) => {
   try {
     console.log(`[主进程] 开始处理文件重命名`)
     console.log(`[主进程] 文件数量: ${files.length}`)
     console.log(`[主进程] 配置选项:`, JSON.stringify(options, null, 2))
     console.log(`[主进程] DeepSeek API密钥: ${options.deepseekApiKey ? `${options.deepseekApiKey.substring(0, 8)}...` : '未配置'}`)
+    
+    // 发送日志到渲染进程
+    event.sender.send('main-process-log', `[主进程] 开始处理文件重命名`)
+    event.sender.send('main-process-log', `[主进程] 文件数量: ${files.length}`)
+    event.sender.send('main-process-log', `[主进程] 配置选项: ${JSON.stringify(options, null, 2)}`)
+    event.sender.send('main-process-log', `[主进程] DeepSeek API密钥: ${options.deepseekApiKey ? `${options.deepseekApiKey.substring(0, 8)}...` : '未配置'}`)
     
     // 限制并发数量为100
     if (files.length > 100) {
@@ -160,18 +166,22 @@ ipcMain.handle('process-files', async (_event, files: string[], options: RenameO
       }
     )
 
+    console.log(`[主进程] 重命名完成，结果:`, results)
+    event.sender.send('main-process-log', `[主进程] 重命名完成，结果: ${JSON.stringify(results, null, 2)}`)
+
     return {
       success: true,
       results,
       message: `重命名完成，成功: ${results.filter(r => r.success).length}, 失败: ${results.filter(r => !r.success).length}`
     }
-      } catch (error: any) {
-      console.error('处理文件失败:', error)
-      return {
-        success: false,
-        error: error.message
-      }
+  } catch (error: any) {
+    console.error('处理文件失败:', error)
+    event.sender.send('main-process-log', `[主进程] 处理文件失败: ${error.message}`)
+    return {
+      success: false,
+      error: error.message
     }
+  }
 })
 
 // 获取重命名进度
@@ -206,15 +216,18 @@ ipcMain.handle('test-deepseek-api', async (_event, apiKey: string) => {
 })
 
 // 系统检查
-ipcMain.handle('check-system', async () => {
+ipcMain.handle('check-system', async (event) => {
   try {
     console.log('[主进程] 开始系统检查...')
+    event.sender.send('main-process-log', '[主进程] 开始系统检查...')
     
     const systemInfo = await systemCheckService.getSystemInfo()
     console.log('[主进程] 系统信息:', systemInfo)
+    event.sender.send('main-process-log', `[主进程] 系统信息: ${JSON.stringify(systemInfo, null, 2)}`)
     
     const dependencies = await systemCheckService.checkDependencies()
     console.log('[主进程] 依赖检查结果:', dependencies)
+    event.sender.send('main-process-log', `[主进程] 依赖检查结果: ${JSON.stringify(dependencies, null, 2)}`)
     
     return {
       success: true,
@@ -223,6 +236,7 @@ ipcMain.handle('check-system', async () => {
     }
   } catch (error: any) {
     console.error('[主进程] 系统检查失败:', error)
+    event.sender.send('main-process-log', `[主进程] 系统检查失败: ${error.message}`)
     return {
       success: false,
       error: error.message

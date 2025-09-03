@@ -34,6 +34,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('result-update', (_event, result) => callback(result))
   },
   
+  // 主进程日志
+  onMainProcessLog: (callback: (log: string) => void) => {
+    ipcRenderer.on('main-process-log', (_event, log) => callback(log))
+  },
+  
   // 错误处理
   onError: (callback: (error: any) => void) => {
     ipcRenderer.on('error-update', (_event, error) => callback(error))
@@ -60,6 +65,7 @@ declare global {
       checkSystem: () => Promise<any>
       onProgress: (callback: (progress: any) => void) => void
       onResult: (callback: (result: any) => void) => void
+      onMainProcessLog: (callback: (log: string) => void) => void
       onError: (callback: (error: any) => void) => void
       removeAllListeners: (channel: string) => void
     }
