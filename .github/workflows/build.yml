@@ -10,8 +10,17 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
-    timeout-minutes: 45  # 增加超时时间
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+        include:
+          - os: macos-latest
+            platform: mac
+            target: dmg
+          - os: windows-latest
+            platform: win
+            target: nsis
 
     steps:
       - name: Checkout code
@@ -24,150 +33,23 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
-
-      - name: Clear npm cache (Windows)
-        run: |
-          npm cache clean --force
-          npm cache verify
-        shell: cmd
 
       - name: Install dependencies
-        run: |
-          echo "=== 开始安装依赖 ==="
-          echo "当前时间: %date% %time%"
-          echo "Node版本:"
-          node --version
-          echo "NPM版本:"
-          npm --version
-          echo "工作目录:"
-          cd
-          echo "当前目录内容:"
-          dir
-          
-          # 清理npm缓存
-          echo "=== 清理npm缓存 ==="
-          npm cache clean --force
-          npm cache verify
-          
-          # 设置npm配置
-          echo "=== 设置npm配置 ==="
-          npm config set registry https://registry.npmjs.org/
-          npm config set fetch-timeout 300000
-          npm config set fetch-retries 3
-          
-          # 检查package文件
-          echo "=== 检查package文件 ==="
-          if exist "package.json" (
-            echo "找到package.json"
-            type package.json | findstr "name"
-          ) else (
-            echo "ERROR: package.json不存在"
-            exit /b 1
-          )
-          
-          if exist "package-lock.json" (
-            echo "找到package-lock.json"
-          ) else (
-            echo "ERROR: package-lock.json不存在"
-            exit /b 1
-          )
-          
-          # 安装依赖
-          echo "=== 开始npm ci ==="
-          npm ci --no-audit --no-fund --prefer-offline --verbose
-          if %ERRORLEVEL% neq 0 (
-            echo "ERROR: npm ci 安装失败"
-            exit /b 1
-          )
-          
-          # 验证依赖安装
-          echo "=== 验证依赖安装 ==="
-          if not exist "node_modules" (
-            echo "ERROR: node_modules目录不存在"
-            exit /b 1
-          )
-          
-          echo "node_modules目录存在，检查内容:"
-          dir node_modules | findstr "vite"
-          dir node_modules | findstr "typescript"
-          
-          # 重建原生模块
-          echo "=== 开始重建原生模块 ==="
-          npm rebuild sharp
-          if %ERRORLEVEL% neq 0 (
-            echo "WARNING: sharp重建失败，但继续执行"
-          )
-          
-          npm rebuild tesseract.js-core
-          if %ERRORLEVEL% neq 0 (
-            echo "WARNING: tesseract.js-core重建失败，但继续执行"
-          )
-          
-          echo "=== 依赖安装和重建完成 ==="
-          echo "完成时间: %date% %time%"
-        timeout-minutes: 20
-        shell: cmd
-
-      - name: Verify dependencies
-        run: |
-          echo "=== 验证依赖安装 ==="
-          echo "检查node_modules目录:"
-          dir node_modules | findstr "vite"
-          dir node_modules | findstr "typescript"
-          
-          echo "检查node_modules/.bin目录:"
-          dir node_modules\.bin | findstr "vite"
-          dir node_modules\.bin | findstr "tsc"
-          
-          echo "检查vite是否可用:"
-          if exist "node_modules\.bin\vite.cmd" (
-            echo "找到vite.cmd，测试执行:"
-            node_modules\.bin\vite.cmd --version
-          ) else (
-            echo "未找到vite.cmd"
-          )
-          
-          echo "检查tsc是否可用:"
-          if exist "node_modules\.bin\tsc.cmd" (
-            echo "找到tsc.cmd，测试执行:"
-            node_modules\.bin\tsc.cmd --version
-          ) else (
-            echo "未找到tsc.cmd"
-          )
-          
-          echo "=== 依赖验证完成 ==="
-        timeout-minutes: 5
-        shell: cmd
+        run: npm ci
 
       - name: Build application
-        run: |
-          echo "=== 开始构建应用 ==="
-          set NODE_OPTIONS=--max-old-space-size=4096
-          echo "NODE_OPTIONS设置为: %NODE_OPTIONS%"
-          
-          echo "=== 构建渲染进程 ==="
-          npm run build:renderer
-          
-          echo "=== 构建主进程 ==="
-          npm run build:main
-          
-          echo "=== 应用构建完成 ==="
-        timeout-minutes: 20
-        shell: cmd
+        run: npm run build
 
       - name: Build Electron app
-        run: scripts/build-ci.bat win
-        timeout-minutes: 25
+        run: npm run electron:build
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: windows-build
+          name: ${{ matrix.platform }}-build
           path: dist-build/*
-          retention-days: 7
 
   release:
     needs: build
@@ -182,7 +64,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            windows-build/*.exe
+            mac-build/*.dmg
+            win-build/*.exe
           draft: false
           prerelease: false
           generate_release_notes: true
