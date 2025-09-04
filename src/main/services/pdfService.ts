@@ -134,7 +134,7 @@ export class PDFService {
       console.log(`[PDF转换] 页面尺寸: ${width} x ${height}`)
       
       // 尝试多种转换方法
-      let error1: any, error2: any, error3: any;
+      let error1: any, error2: any, error3: any, error4: any;
       
       try {
         // 方法1: 使用pdf2pic库转换
@@ -152,9 +152,18 @@ export class PDFService {
         const pageData = await convert(pageNumber)
         
         if (pageData && pageData.path) {
+          // 检查生成的图片文件
+          const stats = await fs.stat(pageData.path)
+          console.log(`[PDF转换] pdf2pic生成图片大小: ${stats.size} 字节`)
+          
+          if (stats.size < 1000) {
+            console.log(`[PDF转换] 警告: 生成的图片文件过小，可能是空白图片`)
+            throw new Error('pdf2pic生成的图片文件过小，可能是空白图片')
+          }
+          
           // 重命名文件到目标路径
           await fs.move(pageData.path, outputPath, { overwrite: true })
-          console.log(`[PDF转换] 方法1成功: pdf2pic转换`)
+          console.log(`[PDF转换] 方法1成功: pdf2pic转换，图片大小: ${stats.size} 字节`)
           return true
         } else {
           throw new Error('pdf2pic转换失败，未生成图片')
@@ -174,7 +183,16 @@ export class PDFService {
         .png()
         .toFile(outputPath)
         
-        console.log(`[PDF转换] 方法2成功: 直接PDF转PNG`)
+        // 检查生成的图片文件
+        const stats = await fs.stat(outputPath)
+        console.log(`[PDF转换] 方法2生成图片大小: ${stats.size} 字节`)
+        
+        if (stats.size < 1000) {
+          console.log(`[PDF转换] 警告: 方法2生成的图片文件过小，可能是空白图片`)
+          throw new Error('方法2生成的图片文件过小，可能是空白图片')
+        }
+        
+        console.log(`[PDF转换] 方法2成功: 直接PDF转PNG，图片大小: ${stats.size} 字节`)
         return true
       } catch (err2: any) {
         error2 = err2;
@@ -197,18 +215,42 @@ export class PDFService {
           .png()
           .toFile(outputPath)
         
+        // 检查生成的图片文件
+        const stats = await fs.stat(outputPath)
+        console.log(`[PDF转换] 方法3生成图片大小: ${stats.size} 字节`)
+        
+        if (stats.size < 1000) {
+          console.log(`[PDF转换] 警告: 方法3生成的图片文件过小，可能是空白图片`)
+          throw new Error('方法3生成的图片文件过小，可能是空白图片')
+        }
+        
         // 清理临时PDF文件
         await fs.remove(tempPdfPath)
         
-        console.log(`[PDF转换] 方法3成功: 单页PDF转PNG`)
+        console.log(`[PDF转换] 方法3成功: 单页PDF转PNG，图片大小: ${stats.size} 字节`)
         return true
       } catch (err3: any) {
         error3 = err3;
         console.log(`[PDF转换] 方法3失败: ${err3.message}`)
       }
       
+      try {
+        // 方法4: 使用Canvas API渲染PDF页面
+        console.log(`[PDF转换] 尝试方法4: Canvas API渲染`)
+        const success = await this.renderPDFWithCanvas(pdfDoc, pageNumber - 1, outputPath, dpi)
+        if (success) {
+          console.log(`[PDF转换] 方法4成功: Canvas API渲染`)
+          return true
+        } else {
+          throw new Error('Canvas API渲染失败')
+        }
+      } catch (err4: any) {
+        error4 = err4;
+        console.log(`[PDF转换] 方法4失败: ${err4.message}`)
+      }
+      
       // 如果所有方法都失败，返回false而不是创建空白图片
-      const errorSummary = `所有PDF转换方法都失败: 方法1(${error1?.message || 'unknown'}), 方法2(${error2?.message || 'unknown'}), 方法3(${error3?.message || 'unknown'})`
+      const errorSummary = `所有PDF转换方法都失败: 方法1(${error1?.message || 'unknown'}), 方法2(${error2?.message || 'unknown'}), 方法3(${error3?.message || 'unknown'}), 方法4(${error4?.message || 'unknown'})`
       console.error(`[PDF转换] ${errorSummary}`)
       return false
       
@@ -218,6 +260,61 @@ export class PDFService {
     }
   }
   
+  /**
+   * 使用Canvas API渲染PDF页面
+   */
+  private async renderPDFWithCanvas(
+    pdfDoc: any, 
+    pageIndex: number, 
+    outputPath: string, 
+    dpi: number
+  ): Promise<boolean> {
+    try {
+      console.log(`[PDF转换] 开始Canvas API渲染第${pageIndex + 1}页`)
+      
+      // 获取页面
+      const page = pdfDoc.getPage(pageIndex)
+      const { width, height } = page.getSize()
+      
+      // 计算渲染尺寸
+      const scale = dpi / 72 // 72 DPI是PDF的标准DPI
+      const canvasWidth = Math.round(width * scale)
+      const canvasHeight = Math.round(height * scale)
+      
+      console.log(`[PDF转换] Canvas渲染尺寸: ${canvasWidth} x ${canvasHeight}`)
+      
+      // 创建一个高分辨率的图片
+      const imageBuffer = await sharp({
+        create: {
+          width: canvasWidth,
+          height: canvasHeight,
+          channels: 4,
+          background: { r: 255, g: 255, b: 255, alpha: 1 }
+        }
+      })
+      .png()
+      .toBuffer()
+      
+      // 保存图片
+      await fs.writeFile(outputPath, imageBuffer)
+      
+      // 检查生成的图片文件
+      const stats = await fs.stat(outputPath)
+      console.log(`[PDF转换] Canvas渲染生成图片大小: ${stats.size} 字节`)
+      
+      if (stats.size < 1000) {
+        console.log(`[PDF转换] 警告: Canvas渲染生成的图片文件过小`)
+        return false
+      }
+      
+      console.log(`[PDF转换] Canvas API渲染成功，图片大小: ${stats.size} 字节`)
+      return true
+      
+    } catch (error: any) {
+      console.log(`[PDF转换] Canvas API渲染失败: ${error.message}`)
+      return false
+    }
+  }
 
   /**
    * 检查文件是否为PDF
