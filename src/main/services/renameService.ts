@@ -1,8 +1,8 @@
 import fs from 'fs-extra'
 import path from 'path'
-import { ocrService } from './ocrService'
-import { pdfService } from './pdfService'
 import axios from 'axios'
+import { ocrService } from './ocrService.js'
+import { pdfService } from './pdfService.js'
 
 export interface RenameOptions {
   storageMode: 'copy' | 'overwrite'

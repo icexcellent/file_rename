@@ -1,9 +1,9 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron'
 import path from 'path'
 import Store from 'electron-store'
-import { renameService, RenameOptions } from './services/renameService'
-import { ocrService } from './services/ocrService'
-import { systemCheckService } from './services/systemCheckService'
+import { renameService, RenameOptions } from './services/renameService.js'
+import { ocrService } from './services/ocrService.js'
+import { systemCheckService } from './services/systemCheckService.js'
 
 // 配置存储
 const store = new Store()
