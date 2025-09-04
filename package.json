@@ -96,7 +96,13 @@
       "target": "portable",
       "artifactName": "智能文件重命名工具-${version}-portable.exe"
     },
-    "asar": false
+    "asar": true,
+    "compression": "maximum",
+    "removePackageScripts": true,
+    "removePackageKeywords": true,
+    "removePackageEngines": true,
+    "nodeGypRebuild": false,
+    "buildDependenciesFromSource": false
   },
   "engines": {
     "node": ">=18.0.0",

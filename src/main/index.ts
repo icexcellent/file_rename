@@ -42,10 +42,13 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
+      backgroundThrottling: false,
+      webSecurity: true,
     },
     title: '智能文件重命名工具',
-    icon: path.join(__dirname, '../assets/icon.png'),
     show: false,
+    backgroundColor: '#ffffff',
+    titleBarStyle: 'default',
   })
 
   // 加载应用
@@ -71,15 +74,18 @@ function createWindow() {
 
 // 应用准备就绪
 app.whenReady().then(async () => {
-  // 初始化OCR服务
-  try {
-    await ocrService.initialize()
-    console.log('OCR服务初始化成功')
-  } catch (error) {
-    console.error('OCR服务初始化失败:', error)
-  }
-
+  // 先创建窗口，快速显示界面
   createWindow()
+
+  // 延迟初始化OCR服务，避免阻塞启动
+  setTimeout(async () => {
+    try {
+      await ocrService.initialize()
+      console.log('OCR服务初始化成功')
+    } catch (error) {
+      console.error('OCR服务初始化失败:', error)
+    }
+  }, 1000)
 
   // macOS 应用激活事件
   app.on('activate', () => {
