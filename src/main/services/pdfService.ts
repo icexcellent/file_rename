@@ -59,12 +59,14 @@ export class PDFService {
       // 创建输出目录
       await fs.ensureDir(outputDir)
 
-      // 使用pdf2pic转换（这里简化处理，实际项目中需要安装pdf2pic）
-      // 由于pdf2pic依赖问题，这里使用替代方案
       const outputPath = path.join(outputDir, `page_${pageNumber}.png`)
       
-      // 模拟转换过程（实际项目中需要真实的PDF转图片实现）
-      await this.simulatePDFToImage(pdfPath, pageNumber, outputPath, dpi)
+      // 尝试真实的PDF转图片转换
+      const success = await this.convertPDFToImage(pdfPath, pageNumber, outputPath, dpi)
+      
+      if (!success) {
+        throw new Error(`PDF页面转换失败: 无法将第${pageNumber}页转换为图片`)
+      }
       
       return outputPath
     } catch (error: any) {
@@ -113,14 +115,14 @@ export class PDFService {
   /**
    * 真实的PDF转图片实现
    */
-  private async simulatePDFToImage(
+  private async convertPDFToImage(
     pdfPath: string, 
     pageNumber: number, 
     outputPath: string, 
     dpi: number
-  ): Promise<void> {
+  ): Promise<boolean> {
     try {
-      console.log(`[PDF转换] 开始真实转换第${pageNumber}页: ${pdfPath}`)
+      console.log(`[PDF转换] 开始转换第${pageNumber}页: ${pdfPath}`)
       
       // 使用pdf-lib读取PDF
       const pdfBytes = await fs.readFile(pdfPath)
@@ -132,7 +134,7 @@ export class PDFService {
       console.log(`[PDF转换] 页面尺寸: ${width} x ${height}`)
       
       // 尝试多种转换方法
-      let error1: any, error2: any, error3: any, error4: any;
+      let error1: any, error2: any, error3: any;
       
       try {
         // 方法1: 使用pdf2pic库转换
@@ -153,7 +155,7 @@ export class PDFService {
           // 重命名文件到目标路径
           await fs.move(pageData.path, outputPath, { overwrite: true })
           console.log(`[PDF转换] 方法1成功: pdf2pic转换`)
-          return
+          return true
         } else {
           throw new Error('pdf2pic转换失败，未生成图片')
         }
@@ -173,7 +175,7 @@ export class PDFService {
         .toFile(outputPath)
         
         console.log(`[PDF转换] 方法2成功: 直接PDF转PNG`)
-        return
+        return true
       } catch (err2: any) {
         error2 = err2;
         console.log(`[PDF转换] 方法2失败: ${err2.message}`)
@@ -199,83 +201,23 @@ export class PDFService {
         await fs.remove(tempPdfPath)
         
         console.log(`[PDF转换] 方法3成功: 单页PDF转PNG`)
-        return
+        return true
       } catch (err3: any) {
         error3 = err3;
         console.log(`[PDF转换] 方法3失败: ${err3.message}`)
       }
       
-      try {
-        // 方法4: 创建高分辨率空白图像（最后手段）
-        console.log(`[PDF转换] 尝试方法4: 创建高分辨率空白图像`)
-        const page = pdfDoc.getPage(pageNumber - 1)
-        const { width, height } = page.getSize()
-        
-        const canvas = {
-          width: Math.round((width * dpi) / 72),
-          height: Math.round((height * dpi) / 72)
-        }
-        
-        await sharp({
-          create: {
-            width: canvas.width,
-            height: canvas.height,
-            channels: 4,
-            background: { r: 255, g: 255, b: 255, alpha: 1 }
-          }
-        })
-        .png()
-        .toFile(outputPath)
-        
-        console.log(`[PDF转换] 方法4成功: 创建高分辨率空白图像`)
-        return
-      } catch (err4: any) {
-        error4 = err4;
-        console.log(`[PDF转换] 方法4失败: ${err4.message}`)
-      }
-      
-      // 如果所有方法都失败，抛出错误
-      const errorSummary = `所有PDF转换方法都失败: 方法1(${error1?.message || 'unknown'}), 方法2(${error2?.message || 'unknown'}), 方法3(${error3?.message || 'unknown'}), 方法4(${error4?.message || 'unknown'})`
+      // 如果所有方法都失败，返回false而不是创建空白图片
+      const errorSummary = `所有PDF转换方法都失败: 方法1(${error1?.message || 'unknown'}), 方法2(${error2?.message || 'unknown'}), 方法3(${error3?.message || 'unknown'})`
       console.error(`[PDF转换] ${errorSummary}`)
-      throw new Error(errorSummary)
+      return false
       
     } catch (error: any) {
-      console.error(`[PDF转换] 真实转换失败: ${pdfPath} 第${pageNumber}页`, error)
-      // 如果真实转换失败，回退到模拟模式
-      console.log(`[PDF转换] 回退到模拟模式`)
-      await this.fallbackToSimulation(outputPath, dpi)
+      console.error(`[PDF转换] 转换失败: ${pdfPath} 第${pageNumber}页`, error)
+      return false
     }
   }
   
-  /**
-   * 回退到模拟模式
-   */
-  private async fallbackToSimulation(outputPath: string, dpi: number): Promise<void> {
-    console.log(`[PDF转换] 开始回退到模拟模式: ${outputPath}`)
-    
-    // 创建一个简单的占位图片
-    const width = Math.round((8.5 * dpi) / 72) // 8.5英寸 * DPI / 72
-    const height = Math.round((11 * dpi) / 72)  // 11英寸 * DPI / 72
-    
-    console.log(`[PDF转换] 模拟模式: 创建占位图片 ${width}x${height} 像素`)
-    
-    await sharp({
-      create: {
-        width,
-        height,
-        channels: 4,
-        background: { r: 255, g: 255, b: 255, alpha: 1 }
-      }
-    })
-    .png()
-    .toFile(outputPath)
-    
-    // 模拟处理时间
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    console.log(`[PDF转换] 模拟模式完成: ${outputPath}`)
-    console.log(`[PDF转换] 警告: 这是空白占位图片，OCR可能无法识别到有用内容`)
-  }
 
   /**
    * 检查文件是否为PDF

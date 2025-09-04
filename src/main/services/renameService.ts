@@ -238,16 +238,40 @@ export class RenameService {
         try {
           const imagePaths = await pdfService.convertAllPagesToImages(filePath, tempDir)
           console.log(`[文本提取] PDF转换完成，生成了 ${imagePaths.length} 张图片`)
-          let allText = ''
           
-          for (let i = 0; i < imagePaths.length; i++) {
-            console.log(`[文本提取] 处理PDF第 ${i + 1} 页图片`)
-            const ocrResult = await ocrService.recognizeText(imagePaths[i])
-            allText += ocrResult.text + ' '
+          if (imagePaths.length === 0) {
+            console.log(`[文本提取] PDF转换失败，没有生成任何图片，使用文件名作为文本`)
+            return path.basename(filePath, ext)
           }
           
-          console.log(`[文本提取] PDF处理完成，总文本长度: ${allText.length}`)
+          let allText = ''
+          let successCount = 0
+          
+          for (let i = 0; i < imagePaths.length; i++) {
+            try {
+              console.log(`[文本提取] 处理PDF第 ${i + 1} 页图片`)
+              const ocrResult = await ocrService.recognizeText(imagePaths[i])
+              if (ocrResult.text && ocrResult.text.trim().length > 0) {
+                allText += ocrResult.text + ' '
+                successCount++
+              }
+            } catch (error: any) {
+              console.log(`[文本提取] PDF第 ${i + 1} 页OCR失败: ${error.message}`)
+            }
+          }
+          
+          console.log(`[文本提取] PDF处理完成，成功处理 ${successCount}/${imagePaths.length} 页，总文本长度: ${allText.length}`)
+          
+          if (allText.trim().length === 0) {
+            console.log(`[文本提取] PDF OCR没有识别到任何文本，使用文件名作为文本`)
+            return path.basename(filePath, ext)
+          }
+          
           return allText
+        } catch (error: any) {
+          console.log(`[文本提取] PDF处理失败: ${error.message}`)
+          console.log(`[文本提取] 使用文件名作为fallback`)
+          return path.basename(filePath, ext)
         } finally {
           await pdfService.cleanupTempFiles(tempDir)
         }
