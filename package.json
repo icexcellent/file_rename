@@ -100,7 +100,6 @@
     "compression": "maximum",
     "removePackageScripts": true,
     "removePackageKeywords": true,
-    "removePackageEngines": true,
     "nodeGypRebuild": false,
     "buildDependenciesFromSource": false
   },
