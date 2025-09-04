@@ -231,22 +231,29 @@ export class RenameService {
         }
       }
       
-      // PDF文件处理
+      // PDF文件处理（优先文本直读，失败回退图片OCR）
       if (ext === '.pdf') {
-        console.log(`[文本提取] 检测到PDF文件，转换为图片后OCR`)
+        console.log(`[文本提取] 检测到PDF文件，优先尝试文本直读(pdf-parse)`)
+        const textFromPdf = await pdfService.extractTextFromPDF(filePath)
+        if (textFromPdf && textFromPdf.trim().length >= 10) {
+          console.log(`[文本提取] PDF文本直读成功，长度: ${textFromPdf.length}`)
+          return textFromPdf
+        }
+
+        console.log(`[文本提取] PDF文本直读失败或文本过短，回退到图片OCR`)
         const tempDir = path.join(path.dirname(filePath), '.temp_pdf_images')
         try {
           const imagePaths = await pdfService.convertAllPagesToImages(filePath, tempDir)
           console.log(`[文本提取] PDF转换完成，生成了 ${imagePaths.length} 张图片`)
-          
+
           if (imagePaths.length === 0) {
             console.log(`[文本提取] PDF转换失败，没有生成任何图片，使用文件名作为文本`)
             return path.basename(filePath, ext)
           }
-          
+
           let allText = ''
           let successCount = 0
-          
+
           for (let i = 0; i < imagePaths.length; i++) {
             try {
               console.log(`[文本提取] 处理PDF第 ${i + 1} 页图片`)
@@ -259,14 +266,14 @@ export class RenameService {
               console.log(`[文本提取] PDF第 ${i + 1} 页OCR失败: ${error.message}`)
             }
           }
-          
+
           console.log(`[文本提取] PDF处理完成，成功处理 ${successCount}/${imagePaths.length} 页，总文本长度: ${allText.length}`)
-          
+
           if (allText.trim().length === 0) {
             console.log(`[文本提取] PDF OCR没有识别到任何文本，使用文件名作为文本`)
             return path.basename(filePath, ext)
           }
-          
+
           return allText
         } catch (error: any) {
           console.log(`[文本提取] PDF处理失败: ${error.message}`)

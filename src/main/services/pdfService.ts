@@ -20,6 +20,36 @@ export interface PDFInfo {
 
 export class PDFService {
   /**
+   * 直接从PDF中提取文本（优先策略）
+   */
+  async extractTextFromPDF(pdfPath: string): Promise<string> {
+    try {
+      console.log(`[PDF文本] 开始提取PDF文本: ${pdfPath}`)
+
+      // 动态引入，避免类型和打包问题
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const pdfParse = require('pdf-parse') as (data: Buffer) => Promise<{ text: string }>
+
+      const dataBuffer = await fs.readFile(pdfPath)
+      const result = await pdfParse(dataBuffer)
+
+      const rawText = (result?.text || '').trim()
+      console.log(`[PDF文本] 文本长度: ${rawText.length}`)
+
+      // 归一化空白字符
+      const normalized = rawText
+        .replace(/[\u0000-\u001F]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+
+      console.log(`[PDF文本] 规范化后长度: ${normalized.length}`)
+      return normalized
+    } catch (error: any) {
+      console.error(`[PDF文本] 提取失败: ${error.message}`)
+      return ''
+    }
+  }
+  /**
    * 获取PDF信息
    */
   async getPDFInfo(pdfPath: string): Promise<PDFInfo> {
