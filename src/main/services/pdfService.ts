@@ -49,28 +49,37 @@ export class PDFService {
     dpi: number = 300
   ): Promise<string> {
     try {
+      console.log(`[PDF转换] convertPageToImage被调用: ${pdfPath} 第${pageNumber}页`)
+      
       // 检查文件大小
       const stats = await fs.stat(pdfPath)
       const fileSizeInMB = stats.size / (1024 * 1024)
+      console.log(`[PDF转换] PDF文件大小: ${fileSizeInMB.toFixed(2)}MB`)
+      
       if (fileSizeInMB > 100) {
         throw new Error(`PDF文件过大: ${fileSizeInMB.toFixed(2)}MB，超过100MB限制`)
       }
 
       // 创建输出目录
       await fs.ensureDir(outputDir)
+      console.log(`[PDF转换] 输出目录已创建: ${outputDir}`)
 
       const outputPath = path.join(outputDir, `page_${pageNumber}.png`)
+      console.log(`[PDF转换] 目标输出路径: ${outputPath}`)
       
       // 尝试真实的PDF转图片转换
+      console.log(`[PDF转换] 开始调用convertPDFToImage方法`)
       const success = await this.convertPDFToImage(pdfPath, pageNumber, outputPath, dpi)
+      console.log(`[PDF转换] convertPDFToImage返回结果: ${success}`)
       
       if (!success) {
         throw new Error(`PDF页面转换失败: 无法将第${pageNumber}页转换为图片`)
       }
       
+      console.log(`[PDF转换] convertPageToImage成功完成: ${outputPath}`)
       return outputPath
     } catch (error: any) {
-      console.error(`PDF页面转换失败: ${pdfPath} 第${pageNumber}页`, error)
+      console.error(`[PDF转换] convertPageToImage失败: ${pdfPath} 第${pageNumber}页`, error)
       throw new Error(`PDF页面转换失败: ${error.message}`)
     }
   }
@@ -84,6 +93,8 @@ export class PDFService {
     dpi: number = 300
   ): Promise<string[]> {
     try {
+      console.log(`[PDF转换] convertAllPagesToImages被调用: ${pdfPath}`)
+      
       const info = await this.getPDFInfo(pdfPath)
       const imagePaths: string[] = []
       
@@ -91,15 +102,17 @@ export class PDFService {
       
       for (let i = 0; i < info.pageCount; i++) {
         try {
+          console.log(`[PDF转换] 开始转换第${i + 1}页`)
           const imagePath = await this.convertPageToImage(pdfPath, i + 1, outputDir, dpi)
           imagePaths.push(imagePath)
+          console.log(`[PDF转换] 第${i + 1}页转换成功: ${imagePath}`)
           
           // 添加延迟避免过度占用资源
           if (i < info.pageCount - 1) {
             await new Promise(resolve => setTimeout(resolve, 200))
           }
-        } catch (error) {
-          console.error(`转换第${i + 1}页失败:`, error)
+        } catch (error: any) {
+          console.error(`[PDF转换] 转换第${i + 1}页失败:`, error.message)
           // 继续处理其他页面
         }
       }
@@ -107,7 +120,7 @@ export class PDFService {
       console.log(`[PDF转换] PDF转换完成: ${pdfPath}, 成功转换${imagePaths.length}页`)
       return imagePaths
     } catch (error: any) {
-      console.error(`PDF转换失败: ${pdfPath}`, error)
+      console.error(`[PDF转换] PDF转换失败: ${pdfPath}`, error)
       throw new Error(`PDF转换失败: ${error.message}`)
     }
   }
